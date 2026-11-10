@@ -22,9 +22,9 @@ public final class ContaDtos {
     }
 
     /** Versão curta, usada dentro de outras respostas. */
-    public record ContaResumo(Long id, String agencia, String numero, StatusConta status) {
+    public record ContaResumo(Long id, String agencia, String numero, StatusConta status, BigDecimal saldo) {
         public static ContaResumo de(Conta c) {
-            return new ContaResumo(c.id, c.agencia, c.numero, c.status);
+            return new ContaResumo(c.id, c.agencia, c.numero, c.status, c.getSaldo());
         }
     }
 

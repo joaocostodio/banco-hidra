@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Banco Hidra · Esboço das telas</title>
+<link rel="icon" href="hidra.svg" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0" />
+<style>
+  :root {
+    --verde: #3ddc97;
+    --verde-escuro: #14714a;
+    --verde-suave: rgb(61 220 151 / 12%);
+    --prata: #c3cad2;
+    --prata-clara: #eef1f4;
+    --prata-escura: #8a939d;
+    --prata-gradiente: linear-gradient(90deg, #8a939d, #eef1f4 45%, #a9b1ba 70%, #e2e6ea);
+    --fundo-app: #0c0d11;
+    --superficie: #16181e;
+    --superficie-2: #1c1f27;
+    --superficie-3: #252833;
+    --borda: #2c303b;
+    --borda-forte: #3a3e4b;
+    --texto: #e8ebef;
+    --texto-suave: #9aa3ad;
+    --tinta: #06140d;
+    --erro: #ff7a7a;
+    --aviso: #f0b866;
+    --raio: 10px;
+    --sombra: 0 12px 40px rgb(0 0 0 / 55%), 0 2px 8px rgb(0 0 0 / 40%);
+    --fonte: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+    --mono: 'Cascadia Code', 'Cascadia Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: #07080b;
+    color: var(--texto);
+    font: 14px/1.45 var(--fonte);
+    -webkit-font-smoothing: antialiased;
+  }
+  .ms {
+    font-family: 'Material Symbols Outlined';
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 1;
+    vertical-align: middle;
+    font-variation-settings: 'FILL' 0, 'opsz' 20;
+    user-select: none;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  input, select { font: inherit; color: inherit; }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* ---------- Barra do esboço (fora do app) ---------- */
+  .esboco-barra {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 10px 20px;
+    background: #050608ee; backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--borda);
+  }
+  .esboco-barra h1 { margin: 0; font-size: 13px; font-weight: 600; color: var(--texto-suave); letter-spacing: .04em; text-transform: uppercase; }
+  .esboco-barra nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  .esboco-barra nav button {
+    border: 1px solid var(--borda); background: var(--superficie); border-radius: 999px;
+    padding: 5px 12px; font-size: 12.5px; color: var(--texto-suave);
+  }
+  .esboco-barra nav button:hover { color: var(--texto); border-color: var(--borda-forte); }
+  .esboco-barra nav button.ativo { background: var(--verde); border-color: var(--verde); color: var(--tinta); font-weight: 600; }
+  .esboco-barra .grupo { font-size: 11px; color: var(--prata-escura); margin-left: 6px; }
+
+  .palco { padding: 28px 20px 60px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .legenda { max-width: 1240px; width: 100%; color: var(--texto-suave); font-size: 13px; }
+  .legenda b { color: var(--texto); }
+  .tela { display: none; width: 100%; max-width: 1240px; }
+  .tela.ativa { display: block; }
+
+  /* Moldura de "janela" */
+  .janela {
+    position: relative;
+    border: 1px solid var(--borda); border-radius: 14px; overflow: hidden;
+    background: var(--fundo-app); box-shadow: var(--sombra);
+    height: 760px; display: flex; flex-direction: column;
+  }
+  .janela-topo { flex: none; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; background: #0a0b0e; border-bottom: 1px solid var(--borda); }
+  .janela-topo i { width: 10px; height: 10px; border-radius: 50%; background: var(--borda-forte); }
+  .janela-topo .url { margin-left: 12px; padding: 3px 12px; border-radius: 6px; background: var(--superficie); color: var(--texto-suave); font: 12px var(--mono); }
+  .janela-corpo { flex: 1; min-height: 0; display: flex; position: relative; }
+
+  /* ---------- Marca ---------- */
+  .marca { display: inline-flex; align-items: center; gap: 10px; }
+  .marca img { width: 32px; height: 32px; }
+  .marca .nome { font-size: 17px; letter-spacing: .01em; }
+  .marca .nome b { font-weight: 700; color: var(--texto); }
+  .marca .nome em { font-style: normal; font-weight: 700; background: var(--prata-gradiente); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  /* ---------- Rodapé marca d'água ---------- */
+  .rodape {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;
+    display: flex; align-items: center; gap: 12px; height: 28px; padding: 0 12px;
+    border-top: 1px solid var(--borda); background: #111217; color: var(--texto-suave); font-size: 11.5px; white-space: nowrap;
+  }
+  .rodape .m { display: inline-flex; align-items: center; gap: 6px; color: var(--texto); }
+  .rodape .m img { width: 14px; height: 14px; }
+  .rodape .m em { font-style: normal; background: var(--prata-gradiente); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 600; }
+  .rodape .sep { width: 1px; height: 14px; background: var(--borda-forte); }
+  .rodape .ficticio { color: var(--prata-escura); }
+  .rodape .espaco { flex: 1; }
+  .rodape .wm { padding-left: 12px; border-left: 1px solid var(--borda-forte); color: var(--prata-escura); opacity: .8; }
+
+  /* ---------- Login ---------- */
+  .login { flex: 1; display: grid; grid-template-columns: 1.1fr 1fr; padding-bottom: 28px; }
+  .login-arte {
+    position: relative; overflow: hidden; padding: 48px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    background:
+      radial-gradient(600px 400px at 30% 35%, rgb(61 220 151 / 16%), transparent 70%),
+      linear-gradient(160deg, #10161300, #0b0e0d), #0e1110;
+    border-right: 1px solid var(--borda);
+  }
+  .login-arte .grande { width: 220px; height: 220px; align-self: center; filter: drop-shadow(0 20px 60px rgb(61 220 151 / 25%)); }
+  .login-arte h2 { margin: 0 0 8px; font-size: 30px; line-height: 1.15; font-weight: 650; }
+  .login-arte h2 span { color: var(--verde); }
+  .login-arte p { margin: 0; color: var(--texto-suave); max-width: 420px; }
+  .linha-prata { height: 2px; width: 72px; border-radius: 2px; background: var(--prata-gradiente); margin: 18px 0; }
+
+  .login-form { display: flex; align-items: center; justify-content: center; padding: 40px; }
+  .cartao-form { width: 100%; max-width: 380px; }
+  .cartao-form h3 { margin: 0 0 4px; font-size: 22px; font-weight: 650; }
+  .cartao-form .sub { margin: 0 0 26px; color: var(--texto-suave); }
+
+  /* Campos estilo Material "outlined" */
+  .campo { position: relative; margin-bottom: 18px; }
+  .campo label { position: absolute; top: -8px; left: 10px; padding: 0 5px; background: var(--fundo-app); font-size: 12px; color: var(--texto-suave); }
+  .campo.em-cartao label { background: var(--superficie); }
+  .campo .caixa {
+    display: flex; align-items: center; gap: 8px; height: 50px; padding: 0 14px;
+    border: 1px solid var(--borda-forte); border-radius: 8px; background: transparent;
+  }
+  .campo.foco .caixa { border: 2px solid var(--verde); padding: 0 13px; }
+  .campo.foco label { color: var(--verde); }
+  .campo.erro .caixa { border-color: var(--erro); }
+  .campo.erro label, .campo .msg-erro { color: var(--erro); }
+  .campo .caixa input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; }
+  .campo .caixa .ms { color: var(--texto-suave); }
+  .campo .dica { margin: 5px 2px 0; font-size: 12px; color: var(--texto-suave); }
+  .campo .msg-erro { margin: 5px 2px 0; font-size: 12px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 42px; padding: 0 20px; border-radius: 999px; border: 1px solid transparent;
+    font-weight: 600; white-space: nowrap;
+  }
+  .btn.primario { background: var(--verde); color: var(--tinta); }
+  .btn.primario:hover { background: #5fe3a9; }
+  .btn.contorno { background: transparent; border-color: var(--borda-forte); color: var(--texto); }
+  .btn.contorno:hover { border-color: var(--prata-escura); }
+  .btn.texto { background: transparent; color: var(--verde); padding: 0 12px; }
+  .btn.perigo { background: transparent; border-color: rgb(255 122 122 / 45%); color: var(--erro); }
+  .btn.pequeno { height: 34px; padding: 0 14px; font-size: 13px; }
+  .btn.largo { width: 100%; }
+  .aviso-linha { display: flex; gap: 8px; align-items: flex-start; margin-top: 22px; padding: 12px 14px; border-radius: 8px; background: var(--superficie); border: 1px solid var(--borda); font-size: 12.5px; color: var(--texto-suave); }
+  .aviso-linha .ms { color: var(--prata); font-size: 18px; }
+
+  .checklist { list-style: none; margin: 0 0 22px; padding: 0; display: grid; gap: 6px; font-size: 13px; }
+  .checklist li { display: flex; align-items: center; gap: 8px; color: var(--texto-suave); }
+  .checklist li.ok { color: var(--texto); }
+  .checklist li .ms { font-size: 18px; }
+  .checklist li.ok .ms { color: var(--verde); font-variation-settings: 'FILL' 1; }
+  .forca { display: flex; gap: 4px; margin: -8px 0 6px; }
+  .forca i { flex: 1; height: 4px; border-radius: 2px; background: var(--superficie-3); }
+  .forca i.on { background: var(--verde); }
+  .forca-txt { font-size: 12px; color: var(--verde); margin-bottom: 14px; }
+
+  /* ---------- Layout ADM ---------- */
+  .lateral {
+    flex: none; width: 236px; padding: 18px 12px 40px;
+    display: flex; flex-direction: column; gap: 4px;
+    background: var(--superficie); border-right: 1px solid var(--borda);
+  }
+  .lateral .marca { padding: 4px 10px 18px; }
+  .lateral .selo { margin: 0 10px 16px; display: inline-flex; align-self: flex-start; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--borda-forte); color: var(--prata); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+  .lateral .selo i { width: 6px; height: 6px; border-radius: 50%; background: var(--verde); }
+  .lateral a {
+    display: flex; align-items: center; gap: 12px; height: 42px; padding: 0 14px; border-radius: 999px;
+    color: var(--texto-suave); text-decoration: none; font-weight: 500; cursor: pointer;
+  }
+  .lateral a:hover { background: var(--superficie-2); color: var(--texto); }
+  .lateral a.ativo { background: var(--verde-suave); color: var(--verde); }
+  .lateral a.ativo .ms { font-variation-settings: 'FILL' 1; }
+  .lateral .grupo-titulo { margin: 14px 14px 6px; font-size: 11px; color: var(--prata-escura); letter-spacing: .06em; text-transform: uppercase; }
+  .lateral .fim { margin-top: auto; }
+
+  .principal { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .topo {
+    flex: none; display: flex; align-items: center; gap: 14px; height: 64px; padding: 0 28px;
+    border-bottom: 1px solid var(--borda);
+  }
+  .topo .trilha { color: var(--texto-suave); font-size: 13px; }
+  .topo .trilha b { color: var(--texto); font-weight: 600; }
+  .topo .espaco { flex: 1; }
+  .busca { display: flex; align-items: center; gap: 8px; width: 300px; height: 38px; padding: 0 14px; border-radius: 999px; background: var(--superficie); border: 1px solid var(--borda); color: var(--texto-suave); font-size: 13px; }
+  .busca kbd { margin-left: auto; font: 11px var(--mono); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--borda-forte); }
+  .usuario { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; color: var(--tinta); background: linear-gradient(135deg, #8ff0c4, #2fbf80); }
+  .avatar.prata { background: linear-gradient(135deg, #eef1f4, #8a939d); }
+  .usuario small { display: block; color: var(--texto-suave); font-size: 11.5px; }
+
+  .conteudo { flex: 1; min-height: 0; overflow: auto; padding: 26px 28px 52px; }
+  .titulo-pagina { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 22px; }
+  .titulo-pagina h2 { margin: 0; font-size: 24px; font-weight: 650; }
+  .titulo-pagina p { margin: 2px 0 0; color: var(--texto-suave); }
+  .titulo-pagina .acoes { margin-left: auto; display: flex; gap: 10px; }
+
+  .cartao { background: var(--superficie); border: 1px solid var(--borda); border-radius: 14px; }
+  .cartao-cab { display: flex; align-items: center; gap: 10px; padding: 16px 20px; border-bottom: 1px solid var(--borda); }
+  .cartao-cab h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .cartao-cab .espaco { flex: 1; }
+
+  /* KPIs */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 18px; }
+  .kpi { padding: 18px 20px; }
+  .kpi .rot { display: flex; align-items: center; gap: 8px; color: var(--texto-suave); font-size: 13px; }
+  .kpi .rot .ms { font-size: 18px; color: var(--prata); }
+  .kpi .val { margin-top: 10px; font-size: 26px; font-weight: 650; letter-spacing: -.01em; }
+  .kpi .val small { font-size: 15px; color: var(--texto-suave); font-weight: 500; }
+  .kpi .var { margin-top: 4px; font-size: 12px; color: var(--texto-suave); }
+  .kpi .var b { color: var(--verde); font-weight: 600; }
+  .kpi.destaque { background: linear-gradient(150deg, rgb(61 220 151 / 14%), transparent 60%), var(--superficie); border-color: rgb(61 220 151 / 30%); }
+  .kpi.destaque .val { color: var(--verde); }
+
+  .grade-2 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
+
+  /* Gráfico de barras simples */
+  .barras { display: flex; align-items: flex-end; gap: 14px; height: 170px; padding: 20px 20px 0; }
+  .barras .col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+  .barras .par { display: flex; gap: 3px; align-items: flex-end; width: 100%; justify-content: center; height: 100%; }
+  .barras .par i { width: 12px; border-radius: 4px 4px 0 0; }
+  .barras .par i.e { background: var(--verde); }
+  .barras .par i.s { background: var(--prata-escura); }
+  .barras .col span { font-size: 11px; color: var(--texto-suave); }
+  .legenda-graf { display: flex; gap: 16px; padding: 12px 20px 16px; font-size: 12px; color: var(--texto-suave); }
+  .legenda-graf i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+  /* Tabelas */
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-weight: 500; font-size: 12px; color: var(--texto-suave); padding: 12px 20px; border-bottom: 1px solid var(--borda); white-space: nowrap; }
+  td { padding: 12px 20px; border-bottom: 1px solid var(--borda); vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: rgb(255 255 255 / 2%); }
+  .dir { text-align: right; }
+  .pessoa { display: flex; align-items: center; gap: 10px; }
+  .pessoa .avatar { width: 30px; height: 30px; font-size: 12px; }
+  .pessoa small { display: block; color: var(--texto-suave); font-size: 12px; }
+  .entrada { color: var(--verde); }
+  .saida { color: var(--prata); }
+  .muted { color: var(--texto-suave); }
+  .ico-tx { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: var(--superficie-2); }
+  .ico-tx .ms { font-size: 18px; }
+  .ico-tx.e { background: var(--verde-suave); color: var(--verde); }
+  .ico-tx.s { color: var(--prata); }
+
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; border: 1px solid var(--borda-forte); color: var(--texto-suave); white-space: nowrap; }
+  .chip i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .chip.ativa { color: var(--verde); border-color: rgb(61 220 151 / 35%); background: var(--verde-suave); }
+  .chip.bloqueada { color: var(--aviso); border-color: rgb(240 184 102 / 35%); background: rgb(240 184 102 / 10%); }
+  .chip.encerrada { color: var(--texto-suave); }
+  .chip.sistema { color: var(--prata); }
+  .chip.primeiro { color: var(--prata); border-style: dashed; }
+
+  .icone-btn { width: 34px; height: 34px; border-radius: 50%; border: 0; background: none; color: var(--texto-suave); display: inline-grid; place-items: center; }
+  .icone-btn:hover { background: var(--superficie-2); color: var(--texto); }
+
+  .filtros { display: flex; gap: 10px; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--borda); flex-wrap: wrap; }
+  .filtro { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--borda-forte); color: var(--texto-suave); font-size: 13px; }
+  .filtro.on { border-color: rgb(61 220 151 / 45%); color: var(--verde); background: var(--verde-suave); }
+  .busca-inline { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; max-width: 360px; height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--borda-forte); color: var(--texto-suave); font-size: 13px; }
+  .paginacao { display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 12px 20px; border-top: 1px solid var(--borda); color: var(--texto-suave); font-size: 12.5px; }
+
+  /* Diálogo */
+  .veu { position: absolute; inset: 0; z-index: 10; background: rgb(5 6 8 / 70%); display: grid; place-items: center; padding-bottom: 28px; }
+  .dialogo { width: 480px; background: var(--superficie); border: 1px solid var(--borda-forte); border-radius: 18px; box-shadow: var(--sombra); }
+  .dialogo h3 { margin: 0; padding: 22px 24px 4px; font-size: 19px; font-weight: 650; }
+  .dialogo .sub { margin: 0; padding: 0 24px 20px; color: var(--texto-suave); font-size: 13px; }
+  .dialogo .corpo { padding: 6px 24px 4px; }
+  .dialogo .rodape-d { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 24px 22px; }
+  .linha-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .info-box { display: flex; gap: 10px; padding: 12px 14px; border-radius: 10px; background: var(--superficie-2); border: 1px solid var(--borda); font-size: 12.5px; color: var(--texto-suave); margin-bottom: 4px; }
+  .info-box .ms { color: var(--verde); font-size: 18px; }
+
+  .senha-box { margin: 6px 0 14px; padding: 18px; border-radius: 12px; text-align: center; background: linear-gradient(150deg, rgb(61 220 151 / 12%), transparent 70%), var(--superficie-2); border: 1px dashed rgb(61 220 151 / 45%); }
+  .senha-box .rot { font-size: 12px; color: var(--texto-suave); }
+  .senha-box .senha { margin: 6px 0 12px; font: 600 28px var(--mono); letter-spacing: .12em; color: var(--verde); }
+  .aviso-amarelo { display: flex; gap: 10px; padding: 12px 14px; border-radius: 10px; background: rgb(240 184 102 / 8%); border: 1px solid rgb(240 184 102 / 30%); color: #f3cf97; font-size: 12.5px; }
+  .aviso-amarelo .ms { font-size: 18px; color: var(--aviso); }
+  .sucesso-ico { width: 54px; height: 54px; margin: 22px auto 0; border-radius: 50%; display: grid; place-items: center; background: var(--verde-suave); color: var(--verde); }
+  .sucesso-ico .ms { font-size: 30px; font-variation-settings: 'FILL' 1; }
+  .dados-resumo { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0 0 14px; font-size: 13px; }
+  .dados-resumo dt { color: var(--texto-suave); }
+  .dados-resumo dd { margin: 0; }
+
+  /* Detalhe da conta */
+  .conta-cab { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin-bottom: 18px; }
+  .titular { padding: 22px; display: flex; gap: 18px; align-items: center; }
+  .titular .avatar { width: 58px; height: 58px; font-size: 20px; }
+  .titular h3 { margin: 0; font-size: 19px; font-weight: 650; }
+  .titular .linha { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px; font-size: 13px; color: var(--texto-suave); }
+  .titular .linha b { color: var(--texto); font-weight: 500; }
+  .saldo-cartao { padding: 22px; position: relative; overflow: hidden; background: linear-gradient(140deg, #123a2a, #0f1a15 55%, #16181e); border-color: rgb(61 220 151 / 30%); }
+  .saldo-cartao::after { content: ''; position: absolute; right: -40px; top: -40px; width: 180px; height: 180px; background: url(hidra.svg) center/contain no-repeat; opacity: .09; }
+  .saldo-cartao .rot { font-size: 13px; color: var(--texto-suave); }
+  .saldo-cartao .valor { margin: 6px 0 14px; font-size: 32px; font-weight: 650; }
+  .saldo-cartao .valor small { font-size: 16px; color: var(--texto-suave); margin-right: 4px; }
+  .saldo-cartao .acoes { display: flex; gap: 8px; flex-wrap: wrap; position: relative; z-index: 1; }
+  .abas { display: flex; gap: 4px; padding: 0 12px; border-bottom: 1px solid var(--borda); }
+  .abas span { padding: 14px 14px 12px; font-weight: 500; color: var(--texto-suave); border-bottom: 2px solid transparent; }
+  .abas span.on { color: var(--verde); border-color: var(--verde); }
+  .abas .cont { margin-left: 6px; font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--superficie-3); color: var(--texto-suave); }
+  .aut { font: 11.5px var(--mono); color: var(--prata-escura); }
+
+  /* Categorias */
+  .grade-cat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .cat { padding: 16px 18px; display: flex; gap: 14px; align-items: center; }
+  .cat .bolha { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--superficie-2); color: var(--prata); }
+  .cat.sis .bolha { background: var(--verde-suave); color: var(--verde); }
+  .cat h4 { margin: 0; font-size: 14.5px; font-weight: 600; }
+  .cat small { color: var(--texto-suave); font-size: 12.5px; }
+  .cat .acoes { margin-left: auto; display: flex; }
+  .cat .cadeado { margin-left: auto; color: var(--prata-escura); font-size: 18px; }
+  .cat.nova { border-style: dashed; color: var(--texto-suave); justify-content: center; cursor: pointer; }
+  .cat.nova:hover { border-color: var(--verde); color: var(--verde); }
+
+  /* ---------- App cliente (prévia) ---------- */
+  .duas-telas { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; padding: 10px 0 20px; }
+  .celular { width: 360px; height: 740px; border-radius: 42px; padding: 12px; background: #1a1c22; border: 1px solid var(--borda-forte); box-shadow: var(--sombra); }
+  .celular .tela-cel { position: relative; height: 100%; border-radius: 32px; overflow: hidden; background: var(--fundo-app); display: flex; flex-direction: column; }
+  .cel-status { display: flex; justify-content: space-between; padding: 12px 22px 6px; font-size: 12px; color: var(--texto-suave); }
+  .cel-topo { display: flex; align-items: center; gap: 10px; padding: 10px 20px 14px; }
+  .cel-topo .ola { flex: 1; }
+  .cel-topo .ola small { display: block; color: var(--texto-suave); font-size: 12px; }
+  .cel-topo .ola b { font-size: 16px; }
+  .cel-saldo { margin: 0 16px; padding: 20px; border-radius: 20px; position: relative; overflow: hidden; background: linear-gradient(140deg, #17543b, #0f241a 60%, #14171c); border: 1px solid rgb(61 220 151 / 30%); }
+  .cel-saldo::after { content: ''; position: absolute; right: -30px; bottom: -40px; width: 160px; height: 160px; background: url(hidra.svg) center/contain no-repeat; opacity: .12; }
+  .cel-saldo .rot { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--texto-suave); }
+  .cel-saldo .valor { margin: 8px 0 4px; font-size: 30px; font-weight: 650; }
+  .cel-saldo .conta { font: 12px var(--mono); color: var(--prata); }
+  .cel-acoes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 18px 16px 6px; }
+  .cel-acoes div { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--texto-suave); }
+  .cel-acoes .bola { width: 54px; height: 54px; border-radius: 18px; display: grid; place-items: center; background: var(--superficie); border: 1px solid var(--borda); color: var(--verde); }
+  .cel-acoes .bola .ms { font-size: 24px; }
+  .cel-secao { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px 6px; font-size: 14px; font-weight: 600; }
+  .cel-secao a { color: var(--verde); font-size: 12.5px; font-weight: 500; }
+  .cel-lista { padding: 0 12px; }
+  .cel-item { display: flex; align-items: center; gap: 12px; padding: 10px 8px; border-bottom: 1px solid var(--borda); }
+  .cel-item:last-child { border: 0; }
+  .cel-item .t { flex: 1; min-width: 0; }
+  .cel-item .t b { display: block; font-weight: 500; font-size: 13.5px; }
+  .cel-item .t small { color: var(--texto-suave); font-size: 12px; }
+  .cel-nav { margin-top: auto; display: flex; justify-content: space-around; padding: 10px 6px 18px; border-top: 1px solid var(--borda); background: var(--superficie); }
+  .cel-nav span { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--texto-suave); }
+  .cel-nav span.on { color: var(--verde); }
+  .cel-nav span.on .ms { font-variation-settings: 'FILL' 1; }
+  .cel-cab { display: flex; align-items: center; gap: 8px; padding: 10px 14px; font-weight: 600; font-size: 16px; }
+  .pix-dest { margin: 8px 16px; padding: 16px; border-radius: 16px; background: var(--superficie); border: 1px solid var(--borda); }
+  .pix-dest .rot { font-size: 12px; color: var(--texto-suave); }
+  .pix-dest .nome { font-size: 16px; font-weight: 600; margin: 4px 0 2px; }
+  .pix-dest dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 12px 0 0; font-size: 12.5px; }
+  .pix-dest dt { color: var(--texto-suave); }
+  .pix-dest dd { margin: 0; }
+  .pix-valor { text-align: center; padding: 18px 16px 6px; }
+  .pix-valor .rot { font-size: 13px; color: var(--texto-suave); }
+  .pix-valor .v { font-size: 38px; font-weight: 650; margin: 4px 0; }
+  .pix-valor .v small { font-size: 18px; color: var(--texto-suave); margin-right: 4px; }
+  .pix-valor .disp { font-size: 12px; color: var(--texto-suave); }
+
+  .nota { max-width: 1240px; width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .nota div { padding: 14px 16px; border-radius: 12px; border: 1px solid var(--borda); background: #0e0f13; font-size: 13px; color: var(--texto-suave); }
+  .nota b { display: block; color: var(--texto); margin-bottom: 4px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header class="esboco-barra">
+  <h1>Esboço · Banco Hidra</h1>
+  <nav id="nav">
+    <span class="grupo">Acesso</span>
+    <button data-t="login" class="ativo">1. Login</button>
+    <button data-t="troca">2. Primeiro acesso</button>
+    <span class="grupo">Painel ADM</span>
+    <button data-t="painel">3. Painel inicial</button>
+    <button data-t="clientes">4. Clientes</button>
+    <button data-t="novo">5. Novo cliente</button>
+    <button data-t="senha">6. Senha provisória</button>
+    <button data-t="conta">7. Conta do cliente</button>
+    <button data-t="categorias">8. Categorias</button>
+    <span class="grupo">Etapa 4</span>
+    <button data-t="cliente">9. App do cliente (prévia)</button>
+  </nav>
+</header>
+
+<main class="palco">
+
+  <!-- ============ 1. LOGIN ============ -->
+  <section class="tela ativa" id="login">
+    <p class="legenda"><b>Login único</b> para ADM e cliente: o sistema lê o perfil do token e manda cada um para a sua área (<code>/admin</code> ou <code>/app</code>).</p>
+    <div class="janela">
+      <div class="janela-topo"><i></i><i></i><i></i><span class="url">localhost:4300/entrar</span></div>
+      <div class="janela-corpo">
+        <div class="login">
+          <div class="login-arte">
+            <div class="marca"><img src="hidra.svg" alt="" /><span class="nome"><b>Banco</b> <em>Hidra</em></span></div>
+            <img class="grande" src="hidra.svg" alt="" />
+            <div>
+              <h2>Seu dinheiro,<br /><span>sob controle</span>.</h2>
+              <div class="linha-prata"></div>
+              <p>Saldo, extrato, Pix e transferências num só lugar. Banco fictício, feito para a disciplina de POO.</p>
+            </div>
+          </div>
+          <div class="login-form">
+            <div class="cartao-form">
+              <h3>Entrar</h3>
+              <p class="sub">Acesse sua conta ou o painel administrativo.</p>
+              <div class="campo foco">
+                <label>E-mail</label>
+                <div class="caixa"><span class="ms">mail</span><input value="ana.souza@email.com" /></div>
+              </div>
+              <div class="campo">
+                <label>Senha</label>
+                <div class="caixa"><span class="ms">lock</span><input type="password" value="12345678" /><span class="ms">visibility</span></div>
+              </div>
+              <button class="btn primario largo">Entrar <span class="ms">arrow_forward</span></button>
+              <div class="aviso-linha"><span class="ms">info</span><span>Primeiro acesso? Use a senha provisória que o banco te entregou. Esqueceu a senha? Fale com o administrador.</span></div>
+            </div>
+          </div>
+        </div>
+        <footer class="rodape"><span class="m"><img src="hidra.svg" alt="" /><b>Banco</b> <em>Hidra</em></span><span class="sep"></span><span class="ficticio">dinheiro fictício · uso acadêmico</span><span class="espaco"></span><span class="wm">criado por joaoklebermoraes123@gmail.com · v0.3</span></footer>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2. TROCA DE SENHA ============ -->
+  <section class="tela" id="troca">
+    <p class="legenda">Quem entra com a <b>senha provisória</b> cai direto aqui e não consegue acessar mais nada até trocar. As regras ficam visíveis e vão sendo marcadas enquanto a pessoa digita.</p>
+    <div class="janela">
+      <div class="janela-topo"><i></i><i></i><i></i><span class="url">localhost:4300/primeiro-acesso</span></div>
+      <div class="janela-corpo">
+        <div class="login">
+          <div class="login-arte">
+            <div class="marca"><img src="hidra.svg" alt="" /><span class="nome"><b>Banco</b> <em>Hidra</em></span></div>
+            <img class="grande" src="hidra.svg" alt="" />
+            <div>
+              <h2>Boas-vindas,<br /><span>Ana</span>.</h2>
+              <div class="linha-prata"></div>
+              <p>Sua conta 0001 / 483920-7 já está aberta. Antes de começar, crie uma senha só sua.</p>
+            </div>
+          </div>
+          <div class="login-form">
+            <div class="cartao-form">
+              <h3>Crie sua senha</h3>
+              <p class="sub">A senha provisória serve só para este primeiro acesso.</p>
+              <div class="campo">
+                <label>Senha provisória</label>
+                <div class="caixa"><span class="ms">key</span><input type="password" value="aaaaaaaaaa" /></div>
+              </div>
+              <div class="campo foco">
+                <label>Nova senha</label>
+                <div class="caixa"><span class="ms">lock</span><input type="password" value="hidra2026x" /><span class="ms">visibility_off</span></div>
+              </div>
+              <div class="forca"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+              <div class="forca-txt">Senha boa</div>
+              <ul class="checklist">
+                <li class="ok"><span class="ms">check_circle</span>Pelo menos 8 caracteres</li>
+                <li class="ok"><span class="ms">check_circle</span>Tem letras</li>
+                <li class="ok"><span class="ms">check_circle</span>Tem números</li>
+                <li><span class="ms">radio_button_unchecked</span>Diferente da senha provisória</li>
+              </ul>
+              <div class="campo erro">
+                <label>Confirme a nova senha</label>
+                <div class="caixa"><span class="ms">lock</span><input type="password" value="hidra2026" /></div>
+                <div class="msg-erro">As senhas não conferem.</div>
+              </div>
+              <button class="btn primario largo">Salvar e entrar</button>
+            </div>
+          </div>
+        </div>
+        <footer class="rodape"><span class="m"><img src="hidra.svg" alt="" /><b>Banco</b> <em>Hidra</em></span><span class="sep"></span><span class="ficticio">dinheiro fictício · uso acadêmico</span><span class="espaco"></span><span class="wm">criado por joaoklebermoraes123@gmail.com · v0.3</span></footer>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3. PAINEL INICIAL ============ -->
+  <section class="tela" id="painel">
+    <p class="legenda">Painel inicial do ADM: os números do banco no topo, entradas e saídas da semana, e as últimas movimentações. O <b>menu lateral</b> é o mesmo em todas as telas do painel.</p>
+    <div class="janela">
+      <div class="janela-topo"><i></i><i></i><i></i><span class="url">localhost:4300/admin</span></div>
+      <div class="janela-corpo">
+        <aside class="lateral" data-menu="painel"></aside>
+        <div class="principal">
+          <div class="topo" data-topo="Painel"></div>
+          <div class="conteudo">
+            <div class="titulo-pagina">
+              <div><h2>Boa noite, Administrador</h2><p>Terça-feira, 10 de novembro de 2026</p></div>
+              <div class="acoes"><button class="btn primario" data-ir="novo"><span class="ms">person_add</span>Novo cliente</button></div>
+            </div>
+            <div class="kpis">
+              <div class="cartao kpi destaque"><div class="rot"><span class="ms">account_balance</span>Total custodiado</div><div class="val num"><small>R$</small> 1.284.930,55</div><div class="var">soma do saldo de todas as contas</div></div>
+              <div class="cartao kpi"><div class="rot"><span class="ms">group</span>Clientes</div><div class="val num">128</div><div class="var"><b>+6</b> este mês</div></div>
+              <div class="cartao kpi"><div class="rot"><span class="ms">credit_card</span>Contas ativas</div><div class="val num">121</div><div class="var">5 bloqueadas · 2 encerradas</div></div>
+              <div class="cartao kpi"><div class="rot"><span class="ms">sync_alt</span>Movimentações hoje</div><div class="val num">342</div><div class="var"><b>R$ 48.210,00</b> movimentados</div></div>
+            </div>
+            <div class="grade-2">
+              <div class="cartao">
+                <div class="cartao-cab"><h3>Últimas movimentações</h3><span class="espaco"></span><button class="btn texto pequeno">Ver todas</button></div>
+                <table>
+                  <thead><tr><th>Descrição</th><th>Conta</th><th>Quando</th><th class="dir">Valor</th></tr></thead>
+                  <tbody>
+                    <tr><td><div class="pessoa"><div class="ico-tx e"><span class="ms">bolt</span></div><div>Pix recebido<small>de Bruno Lima</small></div></div></td><td class="num muted">483920-7</td><td class="muted">há 2 min</td><td class="dir num entrada">+ R$ 150,00</td></tr>
+                    <tr><td><div class="pessoa"><div class="ico-tx s"><span class="ms">bolt</span></div><div>Pix enviado<small>para Ana Souza</small></div></div></td><td class="num muted">219034-1</td><td class="muted">há 2 min</td><td class="dir num saida">− R$ 150,00</td></tr>
+                    <tr><td><div class="pessoa"><div class="ico-tx e"><span class="ms">savings</span></div><div>Depósito<small>pelo administrador</small></div></div></td><td class="num muted">771202-3</td><td class="muted">há 18 min</td><td class="dir num entrada">+ R$ 2.000,00</td></tr>
+                    <tr><td><div class="pessoa"><div class="ico-tx s"><span class="ms">swap_horiz</span></div><div>Transferência<small>para Carla Dias</small></div></div></td><td class="num muted">309811-0</td><td class="muted">há 1 h</td><td class="dir num saida">− R$ 89,90</td></tr>
+                    <tr><td><div class="pessoa"><div class="ico-tx e"><span class="ms">swap_horiz</span></div><div>Transferência<small>de Diego Reis</small></div></div></td><td class="num muted">556017-4</td><td class="muted">há 1 h</td><td class="dir num entrada">+ R$ 89,90</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="cartao">
+                <div class="cartao-cab"><h3>Últimos 7 dias</h3></div>
+                <div class="barras">
+                  <div class="col"><div class="par"><i class="e" style="height:55%"></i><i class="s" style="height:40%"></i></div><span>qua</span></div>
+                  <div class="col"><div class="par"><i class="e" style="height:70%"></i><i class="s" style="height:62%"></i></div><span>qui</span></div>
+                  <div class="col"><div class="par"><i class="e" style="height:92%"></i><i class="s" style="height:74%"></i></div><span>sex</span></div>
+                  <div class="col"><div class="par"><i class="e" style="height:30%"></i><i class="s" style="height:22%"></i></div><span>sáb</span></div>
+                  <div class="col"><div class="par"><i class="e" style="height:18%"></i><i class="s" style="height:14%"></i></div><span>dom</span></div>
+                  <div class="col"><div class="par"><i class="e" style="height:64%"></i><i class="s" style="height:58%"></i></div><span>seg</span></div>
+                  <div class="col"><div class="par"><i class="e" style="height:80%"></i><i class="s" style="height:66%"></i></div><span>ter</span></div>
+                </div>
+                <div class="legenda-graf"><span><i style="background:var(--verde)"></i>Entradas</span><span><i style="background:var(--prata-escura)"></i>Saídas</span></div>
+                <div class="cartao-cab" style="border-top:1px solid var(--borda)"><h3>Precisa de atenção</h3></div>
+                <table><tbody>
+                  <tr><td><span class="chip bloqueada"><i></i>Bloqueada</span></td><td>3 contas bloqueadas</td></tr>
+                  <tr><td><span class="chip primeiro">1º acesso</span></td><td>4 clientes ainda não trocaram a senha</td></tr>
+                </tbody></table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <footer class="rodape" data-rodape></footer>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4. CLIENTES ============ -->
+  <section class="tela" id="clientes">
+    <p class="legenda">Lista de clientes com busca e filtro por situação. Cada linha mostra a conta e o saldo; o menu <b>⋮</b> leva a editar, ver a conta ou gerar uma nova senha provisória. O CPF aparece mascarado.</p>
+    <div class="janela">
+      <div class="janela-topo"><i></i><i></i><i></i><span class="url">localhost:4300/admin/clientes</span></div>
+      <div class="janela-corpo">
+        <aside class="lateral" data-menu="clientes"></aside>
+        <div class="principal">
+          <div class="topo" data-topo="Clientes"></div>
+          <div class="conteudo">
+            <div class="titulo-pagina">
+              <div><h2>Clientes</h2><p>128 clientes · cada cliente tem uma conta corrente</p></div>
+              <div class="acoes"><button class="btn primario" data-ir="novo"><span class="ms">person_add</span>Novo cliente</button></div>
+            </div>
+            <div class="cartao">
+              <div class="filtros">
+                <div class="busca-inline"><span class="ms">search</span>Buscar por nome, CPF, e-mail ou conta</div>
+                <span class="filtro on">Todas</span><span class="filtro">Ativas</span><span class="filtro">Bloqueadas</span><span class="filtro">Encerradas</span><span class="filtro">1º acesso pendente</span>
+              </div>
+              <table>
+                <thead><tr><th>Cliente</th><th>CPF</th><th>Conta</th><th>Situação</th><th class="dir">Saldo</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td><div class="pessoa"><div class="avatar">AS</div><div>Ana Souza<small>ana.souza@email.com</small></div></div></td><td class="num muted">***.982.247-**</td><td class="num">0001 / 483920-7</td><td><span class="chip ativa"><i></i>Ativa</span></td><td class="dir num">R$ 3.540,10</td><td class="dir"><button class="icone-btn"><span class="ms">more_vert</span></button></td></tr>
+                  <tr><td><div class="pessoa"><div class="avatar prata">BL</div><div>Bruno Lima<small>bruno.lima@email.com</small></div></div></td><td class="num muted">***.444.777-**</td><td class="num">0001 / 219034-1</td><td><span class="chip ativa"><i></i>Ativa</span></td><td class="dir num">R$ 812,00</td><td class="dir"><button class="icone-btn"><span class="ms">more_vert</span></button></td></tr>
+                  <tr><td><div class="pessoa"><div class="avatar">CD</div><div>Carla Dias<small>carla.dias@email.com</small></div></div></td><td class="num muted">***.120.335-**</td><td class="num">0001 / 309811-0</td><td><span class="chip bloqueada"><i></i>Bloqueada</span></td><td class="dir num">R$ 15.000,00</td><td class="dir"><button class="icone-btn"><span class="ms">more_vert</span></button></td></tr>
+                  <tr><td><div class="pessoa"><div class="avatar prata">DR</div><div>Diego Reis<small>diego.reis@email.com</small></div></div></td><td class="num muted">***.871.009-**</td><td class="num">0001 / 556017-4</td><td><span class="chip primeiro">1º acesso pendente</span></td><td class="dir num">R$ 0,00</td><td class="dir"><button class="icone-btn"><span class="ms">more_vert</span></button></td></tr>
+                  <tr><td><div class="pessoa"><div class="avatar">EP</div><div>Elisa Prado<small>elisa.prado@email.com</small></div></div></td><td class="num muted">***.302.118-**</td><td class="num">0001 / 771202-3</td><td><span class="chip ativa"><i></i>Ativa</span></td><td class="dir num">R$ 2.000,00</td><td class="dir"><button class="icone-btn"><span class="ms">more_vert</span></button></td></tr>
+                  <tr><td><div class="pessoa"><div class="avatar prata">FM</div><div>Fábio Melo<small>fabio.melo@email.com</small></div></div></td><td class="num muted">***.655.420-**</td><td class="num">0001 / 104588-9</td><td><span class="chip encerrada"><i></i>Encerrada</span></td><td class="dir num muted">R$ 0,00</td><td class="dir"><button class="icone-btn"><span class="ms">more_vert</span></button></td></tr>
+                </tbody>
+              </table>
+              <div class="paginacao">Itens por página: 10 <span>1–6 de 128</span><button class="icone-btn"><span class="ms">chevron_left</span></button><button class="icone-btn"><span class="ms">chevron_right</span></button></div>
+            </div>
+          </div>
+        </div>
+        <footer class="rodape" data-rodape></footer>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5. NOVO CLIENTE ============ -->
+  <section class="tela" id="novo">
+    <p class="legenda">Cadastro em uma janela por cima da lista: só <b>nome, CPF e e-mail</b>. O CPF é validado na hora (dígitos verificadores) e a conta é aberta junto.</p>
+    <div class="janela">
+      <div class="janela-topo"><i></i><i></i><i></i><span class="url">localhost:4300/admin/clientes</span></div>
+      <div class="janela-corpo">
+        <aside class="lateral" data-menu="clientes"></aside>
+        <div class="principal">
+          <div class="topo" data-topo="Clientes"></div>
+          <div class="conteudo"><div class="titulo-pagina"><div><h2>Clientes</h2><p>128 clientes</p></div></div><div class="cartao" style="height:420px"></div></div>
+        </div>
+        <div class="veu">
+          <div class="dialogo">
+            <h3>Novo cliente</h3>
+            <p class="sub">A conta corrente é aberta automaticamente na agência 0001.</p>
+            <div class="corpo">
+              <div class="campo em-cartao foco"><label>Nome completo</label><div class="caixa"><input value="Gabriela Nunes" /></div></div>
+              <div class="linha-2">
+                <div class="campo em-cartao"><label>CPF</label><div class="caixa"><input class="num" value="111.444.777-35" /><span class="ms" style="color:var(--verde)">check_circle</span></div></div>
+                <div class="campo em-cartao erro"><label>E-mail</label><div class="caixa"><input value="bruno.lima@email.com" /></div><div class="msg-erro">Este e-mail já é de outro cliente.</div></div>
+              </div>
+              <div class="info-box"><span class="ms">key</span><span>Ao salvar, o sistema gera uma <b style="color:var(--texto)">senha provisória</b> para você entregar ao cliente. No primeiro acesso ele cria a própria senha.</span></div>
+            </div>
+            <div class="rodape-d"><button class="btn contorno">Cancelar</button><button class="btn primario" data-ir="senha">Cadastrar e abrir conta</button></div>
+          </div>
+        </div>
+        <footer class="rodape" data-rodape></footer>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6. SENHA PROVISÓRIA ============ -->
+  <section class="tela" id="senha">
+    <p class="legenda">Depois de salvar: a conta aberta e a <b>senha provisória</b>, que só aparece uma vez (o banco guarda apenas o hash). Tem botão de copiar a mensagem pronta para mandar ao cliente.</p>
+    <div class="janela">
+      <div class="janela-topo"><i></i><i></i><i></i><span class="url">localhost:4300/admin/clientes</span></div>
+      <div class="janela-corpo">
+        <aside class="lateral" data-menu="clientes"></aside>
+        <div class="principal">
+          <div class="topo" data-topo="Clientes"></div>
+          <div class="conteudo"><div class="titulo-pagina"><div><h2>Clientes</h2><p>129 clientes</p></div></div><div class="cartao" style="height:420px"></div></div>
+        </div>
+        <div class="veu">
+          <div class="dialogo" style="text-align:left">
+            <div class="sucesso-ico"><span class="ms">check_circle</span></div>
+            <h3 style="text-align:center;padding-top:12px">Conta aberta!</h3>
+            <p class="sub" style="text-align:center">Gabriela Nunes já é cliente do Banco Hidra.</p>
+            <div class="corpo">
+              <dl class="dados-resumo">
+                <dt>Agência / conta</dt><dd class="num">0001 / 650213-8</dd>
+                <dt>E-mail de acesso</dt><dd>gabi.nunes@email.com</dd>
+              </dl>
+              <div class="senha-box">
+                <div class="rot">Senha provisória</div>
+                <div class="senha">K7mQ2xRp9T</div>
+                <button class="btn contorno pequeno"><span class="ms">content_copy</span>Copiar senha</button>
+                <button class="btn contorno pequeno"><span class="ms">forward_to_inbox</span>Copiar mensagem</button>
+              </div>
+              <div class="aviso-amarelo"><span class="ms">visibility_off</span><span>Esta senha não será mostrada de novo. Se ela se perder, gere outra em <b>⋮ → Nova senha provisória</b>.</span></div>
+            </div>
+            <div class="rodape-d"><button class="btn contorno" data-ir="conta">Ver conta</button><button class="btn primario">Concluir</button></div>
+          </div>
+        </div>
+        <footer class="rodape" data-rodape></footer>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 7. CONTA ============ -->
+  <section class="tela" id="conta">
+    <p class="legenda">Detalhe de uma conta: dados do titular, saldo e as ações do ADM (<b>depositar, bloquear, encerrar</b>). Embaixo, as abas de extrato (com filtro de período) e chaves Pix. Cada linha do extrato abre o comprovante.</p>
+    <div class="janela">
+      <div class="janela-topo"><i></i><i></i><i></i><span class="url">localhost:4300/admin/contas/12</span></div>
+      <div class="janela-corpo">
+        <aside class="lateral" data-menu="contas"></aside>
+        <div class="principal">
+          <div class="topo" data-topo="Contas › 483920-7"></div>
+          <div class="conteudo">
+            <div class="conta-cab">
+              <div class="cartao titular">
+                <div class="avatar">AS</div>
+                <div>
+                  <h3>Ana Souza <span class="chip ativa" style="vertical-align:3px;margin-left:6px"><i></i>Ativa</span></h3>
+                  <div class="linha"><span>Agência <b class="num">0001</b></span><span>Conta <b class="num">483920-7</b></span><span>CPF <b class="num">***.982.247-**</b></span></div>
+                  <div class="linha"><span><span class="ms" style="font-size:16px">mail</span> ana.souza@email.com</span><span><span class="ms" style="font-size:16px">calendar_today</span> cliente desde 09/11/2026</span></div>
+                </div>
+              </div>
+              <div class="cartao saldo-cartao">
+                <div class="rot">Saldo disponível</div>
+                <div class="valor num"><small>R$</small>3.540,10</div>
+                <div class="acoes">
+                  <button class="btn primario pequeno"><span class="ms">add</span>Depositar</button>
+                  <button class="btn contorno pequeno"><span class="ms">lock</span>Bloquear</button>
+                  <button class="btn perigo pequeno"><span class="ms">block</span>Encerrar</button>
+                </div>
+              </div>
+            </div>
+            <div class="cartao">
+              <div class="abas"><span class="on">Extrato</span><span>Chaves Pix <span class="cont">3</span></span></div>
+              <div class="filtros">
+                <span class="filtro">7 dias</span><span class="filtro on">30 dias</span><span class="filtro">90 dias</span><span class="filtro"><span class="ms" style="font-size:16px">date_range</span>Período</span>
+                <span style="flex:1"></span>
+                <span class="muted" style="font-size:13px">Entradas <b class="entrada num">R$ 4.150,00</b> · Saídas <b class="saida num">R$ 609,90</b></span>
+              </div>
+              <table>
+                <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Autenticação</th><th class="dir">Valor</th><th class="dir">Saldo</th></tr></thead>
+                <tbody>
+                  <tr><td class="num muted">10/11 21:42</td><td><div class="pessoa"><div class="ico-tx e"><span class="ms">bolt</span></div><div>Pix recebido<small>Bruno Lima</small></div></div></td><td><span class="chip">Pix</span></td><td class="aut">7f3a…c21e</td><td class="dir num entrada">+ 150,00</td><td class="dir num">3.540,10</td></tr>
+                  <tr><td class="num muted">10/11 12:05</td><td><div class="pessoa"><div class="ico-tx s"><span class="ms">swap_horiz</span></div><div>Transferência enviada<small>Carla Dias · aluguel</small></div></div></td><td><span class="chip">Transferência</span></td><td class="aut">b81d…09fa</td><td class="dir num saida">− 520,00</td><td class="dir num">3.390,10</td></tr>
+                  <tr><td class="num muted">09/11 18:30</td><td><div class="pessoa"><div class="ico-tx s"><span class="ms">bolt</span></div><div>Pix enviado<small>Elisa Prado</small></div></div></td><td><span class="chip">Pix</span></td><td class="aut">2c44…e7b0</td><td class="dir num saida">− 89,90</td><td class="dir num">3.910,10</td></tr>
+                  <tr><td class="num muted">09/11 09:12</td><td><div class="pessoa"><div class="ico-tx e"><span class="ms">savings</span></div><div>Depósito<small>salário</small></div></div></td><td><span class="chip">Depósito</span></td><td class="aut">e015…44d2</td><td class="dir num entrada">+ 4.000,00</td><td class="dir num">4.000,00</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <footer class="rodape" data-rodape></footer>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 8. CATEGORIAS ============ -->
+  <section class="tela" id="categorias">
+    <p class="legenda">Categorias de transação. As <b>de sistema</b> (com cadeado) são usadas pelo próprio banco e não podem ser editadas nem excluídas; as criadas pelo ADM só podem ser excluídas se nenhuma transação usar.</p>
+    <div class="janela">
+      <div class="janela-topo"><i></i><i></i><i></i><span class="url">localhost:4300/admin/categorias</span></div>
+      <div class="janela-corpo">
+        <aside class="lateral" data-menu="categorias"></aside>
+        <div class="principal">
+          <div class="topo" data-topo="Categorias"></div>
+          <div class="conteudo">
+            <div class="titulo-pagina">
+              <div><h2>Categorias</h2><p>Classificam cada movimentação do extrato</p></div>
+              <div class="acoes"><button class="btn primario"><span class="ms">add</span>Nova categoria</button></div>
+            </div>
+            <div class="grade-cat">
+              <div class="cartao cat sis"><div class="bolha"><span class="ms">savings</span></div><div><h4>Depósito</h4><small>de sistema · 412 transações</small></div><span class="ms cadeado">lock</span></div>
+              <div class="cartao cat sis"><div class="bolha"><span class="ms">swap_horiz</span></div><div><h4>Transferência</h4><small>de sistema · 1.208 transações</small></div><span class="ms cadeado">lock</span></div>
+              <div class="cartao cat sis"><div class="bolha"><span class="ms">bolt</span></div><div><h4>Pix</h4><small>de sistema · 3.977 transações</small></div><span class="ms cadeado">lock</span></div>
+              <div class="cartao cat sis"><div class="bolha"><span class="ms">receipt_long</span></div><div><h4>Pagamento</h4><small>de sistema · 96 transações</small></div><span class="ms cadeado">lock</span></div>
+              <div class="cartao cat sis"><div class="bolha"><span class="ms">payments</span></div><div><h4>Saque</h4><small>de sistema · 0 transações</small></div><span class="ms cadeado">lock</span></div>
+              <div class="cartao cat"><div class="bolha"><span class="ms">sell</span></div><div><h4>Mercado</h4><small>criada pelo ADM · 34 transações</small></div><div class="acoes"><button class="icone-btn"><span class="ms">edit</span></button></div></div>
+              <div class="cartao cat"><div class="bolha"><span class="ms">sell</span></div><div><h4>Aluguel</h4><small>criada pelo ADM · sem uso</small></div><div class="acoes"><button class="icone-btn"><span class="ms">edit</span></button><button class="icone-btn"><span class="ms">delete</span></button></div></div>
+              <div class="cartao cat nova"><span class="ms">add</span>Nova categoria</div>
+            </div>
+          </div>
+        </div>
+        <footer class="rodape" data-rodape></footer>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 9. APP DO CLIENTE ============ -->
+  <section class="tela" id="cliente">
+    <p class="legenda">Prévia de como fica o <b>app do cliente</b> (etapa 4), para ver se a identidade conversa com o painel: início com saldo (olho para ocultar) e a tela de confirmar um Pix, que mostra quem vai receber antes de enviar.</p>
+    <div class="duas-telas">
+      <div class="celular"><div class="tela-cel">
+        <div class="cel-status"><span>21:45</span><span>●●● ▮</span></div>
+        <div class="cel-topo"><div class="avatar">AS</div><div class="ola"><small>Olá,</small><b>Ana Souza</b></div><span class="ms" style="color:var(--texto-suave)">notifications</span></div>
+        <div class="cel-saldo">
+          <div class="rot">Saldo disponível <span class="ms">visibility</span></div>
+          <div class="valor num">R$ 3.540,10</div>
+          <div class="conta">Ag 0001 · CC 483920-7</div>
+        </div>
+        <div class="cel-acoes">
+          <div><span class="bola"><span class="ms">bolt</span></span>Pix</div>
+          <div><span class="bola"><span class="ms">swap_horiz</span></span>Transferir</div>
+          <div><span class="bola"><span class="ms">barcode</span></span>Pagar</div>
+          <div><span class="bola"><span class="ms">qr_code_2</span></span>Cobrar</div>
+        </div>
+        <div class="cel-secao">Últimas transações <a>Extrato</a></div>
+        <div class="cel-lista">
+          <div class="cel-item"><div class="ico-tx e"><span class="ms">bolt</span></div><div class="t"><b>Pix recebido</b><small>Bruno Lima · hoje</small></div><span class="num entrada">+150,00</span></div>
+          <div class="cel-item"><div class="ico-tx s"><span class="ms">swap_horiz</span></div><div class="t"><b>Transferência</b><small>Carla Dias · hoje</small></div><span class="num saida">−520,00</span></div>
+          <div class="cel-item"><div class="ico-tx s"><span class="ms">bolt</span></div><div class="t"><b>Pix enviado</b><small>Elisa Prado · ontem</small></div><span class="num saida">−89,90</span></div>
+        </div>
+        <div class="cel-nav"><span class="on"><span class="ms">home</span>Início</span><span><span class="ms">receipt_long</span>Extrato</span><span><span class="ms">bolt</span>Pix</span><span><span class="ms">person</span>Perfil</span></div>
+      </div></div>
+
+      <div class="celular"><div class="tela-cel">
+        <div class="cel-status"><span>21:46</span><span>●●● ▮</span></div>
+        <div class="cel-cab"><span class="ms">arrow_back</span>Confirmar Pix</div>
+        <div class="pix-valor">
+          <div class="rot">Você está enviando</div>
+          <div class="v num"><small>R$</small>150,00</div>
+          <div class="disp">Saldo depois do Pix: R$ 3.390,10</div>
+        </div>
+        <div class="pix-dest">
+          <div class="rot">Para</div>
+          <div class="nome">Bruno Lima</div>
+          <div class="muted" style="font-size:12.5px">CPF ***.444.777-**</div>
+          <dl>
+            <dt>Chave</dt><dd>bruno.lima@email.com</dd>
+            <dt>Banco</dt><dd>Banco Hidra</dd>
+            <dt>Agência / conta</dt><dd class="num">0001 / 219034-1</dd>
+          </dl>
+        </div>
+        <div style="padding:0 16px">
+          <div class="campo" style="margin-top:14px"><label>Mensagem (opcional)</label><div class="caixa"><input value="pizza de sexta 🍕" /></div></div>
+        </div>
+        <div style="margin-top:auto;padding:16px">
+          <button class="btn primario largo" style="height:50px"><span class="ms">bolt</span>Enviar Pix</button>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <div class="nota">
+    <div><b>Paleta</b>Fundo #0c0d11, superfícies em grafite, verde #3ddc97 para ação e dinheiro entrando, prata para saídas e detalhes. É a mesma identidade do GenForm.</div>
+    <div><b>Componentes</b>No app real tudo será Angular Material (campos outlined, botões pill, tabela, diálogo, menu), tematizado com essas cores.</div>
+    <div><b>Dinheiro</b>Valores em fonte mono alinhados à direita. Entradas em verde com “+”, saídas em prata com “−” (sem vermelho, que fica só para erros).</div>
+  </div>
+</main>
+
+<script>
+  // Menu lateral e topo repetidos nas telas do painel
+  const itens = [
+    ['painel', 'space_dashboard', 'Painel'],
+    ['clientes', 'group', 'Clientes'],
+    ['contas', 'credit_card', 'Contas'],
+    ['transacoes', 'sync_alt', 'Movimentações'],
+    ['categorias', 'sell', 'Categorias'],
+  ];
+  document.querySelectorAll('[data-menu]').forEach(el => {
+    const atual = el.dataset.menu;
+    el.innerHTML =
+      '<div class="marca"><img src="hidra.svg" alt="" /><span class="nome"><b>Banco</b> <em>Hidra</em></span></div>' +
+      '<span class="selo"><i></i>Administração</span>' +
+      itens.map(([id, ic, nome]) => `<a class="${id === atual ? 'ativo' : ''}" data-ir="${id === 'contas' ? 'conta' : id}"><span class="ms">${ic}</span>${nome}</a>`).join('') +
+      '<div class="fim"><a><span class="ms">key</span>Trocar minha senha</a><a data-ir="login"><span class="ms">logout</span>Sair</a></div>';
+  });
+  document.querySelectorAll('[data-topo]').forEach(el => {
+    el.innerHTML =
+      `<span class="trilha">Administração › <b>${el.dataset.topo}</b></span><span class="espaco"></span>` +
+      '<div class="busca"><span class="ms">search</span>Buscar cliente ou conta<kbd>Ctrl K</kbd></div>' +
+      '<div class="usuario"><div class="avatar prata">AD</div><div>Administrador<small>admin@hidra.com</small></div></div>';
+  });
+  document.querySelectorAll('[data-rodape]').forEach(el => {
+    el.innerHTML = '<span class="m"><img src="hidra.svg" alt="" /><b>Banco</b> <em>Hidra</em></span><span class="sep"></span><span class="ficticio">dinheiro fictício · uso acadêmico</span><span class="espaco"></span><span class="wm">criado por joaoklebermoraes123@gmail.com · v0.3</span>';
+  });
+
+  // Navegação entre as telas do esboço
+  function mostrar(id) {
+    if (!document.getElementById(id)) return;
+    document.querySelectorAll('.tela').forEach(t => t.classList.toggle('ativa', t.id === id));
+    document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('ativo', b.dataset.t === id));
+    history.replaceState(null, '', '#' + id);
+    window.scrollTo({ top: 0 });
+  }
+  document.addEventListener('click', e => {
+    const alvo = e.target.closest('[data-t],[data-ir]');
+    if (alvo) mostrar(alvo.dataset.t || alvo.dataset.ir);
+  });
+  if (location.hash) mostrar(location.hash.slice(1));
+</script>
+</body>
+</html>

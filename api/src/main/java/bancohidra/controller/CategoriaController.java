@@ -23,6 +23,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Path("/categorias")
 @RolesAllowed(Papeis.ADMIN)
@@ -32,14 +34,20 @@ public class CategoriaController {
 
     @GET
     public List<CategoriaResponse> listar() {
+        // Uma consulta só para contar o uso de todas as categorias
+        Map<Long, Long> usos = Transacao.getEntityManager()
+                .createQuery("select t.categoria.id, count(t) from Transacao t group by t.categoria.id", Object[].class)
+                .getResultStream()
+                .collect(Collectors.toMap(l -> (Long) l[0], l -> (Long) l[1]));
         return Categoria.<Categoria>listAll(Sort.ascending("descricao")).stream()
-                .map(CategoriaResponse::de).toList();
+                .map(c -> CategoriaResponse.de(c, usos.getOrDefault(c.id, 0L))).toList();
     }
 
     @GET
     @Path("/{id}")
     public CategoriaResponse buscar(@PathParam("id") Long id) {
-        return CategoriaResponse.de(encontrar(id));
+        Categoria categoria = encontrar(id);
+        return CategoriaResponse.de(categoria, usos(categoria));
     }
 
     @POST
@@ -49,7 +57,7 @@ public class CategoriaController {
         Categoria categoria = new Categoria();
         categoria.descricao = req.descricao().trim();
         categoria.persist();
-        return Response.status(Response.Status.CREATED).entity(CategoriaResponse.de(categoria)).build();
+        return Response.status(Response.Status.CREATED).entity(CategoriaResponse.de(categoria, 0)).build();
     }
 
     @PUT
@@ -62,7 +70,7 @@ public class CategoriaController {
         }
         exigirDescricaoLivre(req.descricao(), id);
         categoria.descricao = req.descricao().trim();
-        return CategoriaResponse.de(categoria);
+        return CategoriaResponse.de(categoria, usos(categoria));
     }
 
     @DELETE
@@ -73,11 +81,15 @@ public class CategoriaController {
         if (categoria.sistema) {
             throw new RegraNegocioException("Categorias do sistema não podem ser excluídas");
         }
-        if (Transacao.count("categoria", categoria) > 0) {
+        if (usos(categoria) > 0) {
             throw new RegraNegocioException("Categoria em uso por transações não pode ser excluída");
         }
         categoria.delete();
         return Response.noContent().build();
+    }
+
+    private static long usos(Categoria categoria) {
+        return Transacao.count("categoria", categoria);
     }
 
     private Categoria encontrar(Long id) {

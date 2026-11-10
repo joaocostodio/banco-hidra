@@ -35,11 +35,12 @@ public final class ClienteDtos {
     public record SenhaProvisoriaResponse(String senhaProvisoria) {
     }
 
+    /** {@code primeiroAcesso = true}: o cliente ainda não trocou a senha provisória. */
     public record ClienteResponse(Long id, String nome, String cpf, String email, Perfil perfil,
-                                  LocalDateTime criadoEm, ContaDtos.ContaResumo conta) {
+                                  LocalDateTime criadoEm, boolean primeiroAcesso, ContaDtos.ContaResumo conta) {
         public static ClienteResponse de(Usuario u, Conta conta) {
-            return new ClienteResponse(u.id, u.nome, u.cpf == null ? null : Cpf.formatar(u.cpf), u.email, u.perfil, u.criadoEm,
-                    conta == null ? null : ContaDtos.ContaResumo.de(conta));
+            return new ClienteResponse(u.id, u.nome, u.cpf == null ? null : Cpf.formatar(u.cpf), u.email, u.perfil,
+                    u.criadoEm, u.isTrocarSenha(), conta == null ? null : ContaDtos.ContaResumo.de(conta));
         }
     }
 }
