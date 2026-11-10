@@ -10,11 +10,11 @@
         <b>Comprovante</b>
         <small>{{ c.categoria }} · {{ c.dataHora | date: "dd/MM/yyyy 'às' HH:mm:ss" }}</small>
       </div>
-      <span class="ico-tx entrada"><mat-icon>{{ c.categoria | iconeCategoria }}</mat-icon></span>
+      <span class="ico-tx entrada"><app-icone [nome]="c.categoria | iconeCategoria" /></span>
     </div>
 
     <div class="valor num">{{ c.valor | currency: 'BRL' }}</div>
-    @if (c.descricao) {
+    @if (c.descricao && c.descricao !== c.categoria) {
       <p class="descricao">“{{ c.descricao }}”</p>
     }
 
@@ -49,5 +49,11 @@
   }
 </mat-dialog-content>
 <mat-dialog-actions align="end">
+  @if (comprovante.value(); as c) {
+    <button matButton (click)="copiar(c)">
+      <mat-icon>{{ copiado() ? 'check' : 'content_copy' }}</mat-icon>
+      {{ copiado() ? 'Copiado' : 'Copiar' }}
+    </button>
+  }
   <button matButton="filled" mat-dialog-close>Fechar</button>
 </mat-dialog-actions>

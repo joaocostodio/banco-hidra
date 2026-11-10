@@ -11,7 +11,8 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../../common/auth/auth.service';
 import { mensagemDeErro } from '../../../../common/erros';
 import { IconeCategoriaPipe } from '../../../../common/formatos';
-import { ComprovanteDialog } from '../../../contas/componentes/comprovante/comprovante';
+import { Icone } from '../../../../common/icone/icone';
+import { ComprovanteDialog } from '../../../../common/comprovante/comprovante';
 import { DetalheTransacaoPipe, SinalPipe, TituloTransacaoPipe } from '../../../contas/componentes/transacao.pipes';
 import { Transacao } from '../../../contas/model/conta.model';
 import { ContaService } from '../../../contas/services/conta.service';
@@ -31,6 +32,7 @@ import { PainelService, alturasDasBarras, saudacao } from '../../services/painel
     DatePipe,
     DecimalPipe,
     IconeCategoriaPipe,
+    Icone,
     TituloTransacaoPipe,
     DetalheTransacaoPipe,
     SinalPipe,
@@ -72,6 +74,6 @@ export class Painel {
   }
 
   protected abrirComprovante(t: Transacao): void {
-    this.dialog.open(ComprovanteDialog, { data: t.autenticacao });
+    this.dialog.open(ComprovanteDialog, { data: this.contas.comprovante(t.autenticacao) });
   }
 }

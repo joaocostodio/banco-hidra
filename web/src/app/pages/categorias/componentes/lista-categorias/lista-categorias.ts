@@ -11,6 +11,7 @@ import { filter, switchMap } from 'rxjs';
 import { Confirmacao } from '../../../../common/confirmacao/confirmacao';
 import { mensagemDeErro } from '../../../../common/erros';
 import { IconeCategoriaPipe } from '../../../../common/formatos';
+import { Icone } from '../../../../common/icone/icone';
 import { Categoria } from '../../model/categoria.model';
 import { CategoriaService, podeExcluir } from '../../services/categoria.service';
 import { CategoriaFormDialog } from '../categoria-form/categoria-form';
@@ -18,7 +19,7 @@ import { CategoriaFormDialog } from '../categoria-form/categoria-form';
 /** Categorias de transação: as do sistema são fixas; as do ADM podem ser renomeadas e excluídas (se não usadas). */
 @Component({
   selector: 'app-lista-categorias',
-  imports: [MatButtonModule, MatIconModule, MatTooltipModule, MatProgressBarModule, DecimalPipe, IconeCategoriaPipe],
+  imports: [MatButtonModule, MatIconModule, MatTooltipModule, MatProgressBarModule, DecimalPipe, IconeCategoriaPipe, Icone],
   templateUrl: './lista-categorias.html',
   styleUrl: './lista-categorias.css',
 })

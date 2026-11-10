@@ -36,21 +36,7 @@ export interface ChavePix {
   criadaEm: string;
 }
 
-export interface ParteComprovante {
-  nome: string;
-  agencia: string;
-  conta: string;
-}
-
-export interface Comprovante {
-  autenticacao: string;
-  categoria: string;
-  valor: number;
-  descricao: string;
-  dataHora: string;
-  origem: ParteComprovante | null;
-  destino: ParteComprovante | null;
-}
+export type { Comprovante, ParteComprovante } from '../../../common/comprovante/comprovante.model';
 
 export interface Deposito {
   valor: number;

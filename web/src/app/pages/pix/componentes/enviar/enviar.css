@@ -1,0 +1,277 @@
+:host {
+  display: block;
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+.cabeca {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -6px 0 10px -10px;
+}
+
+.cabeca h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+}
+
+.passos {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
+}
+
+.passos li {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--superficie-3);
+}
+
+.passos li.feito,
+.passos li.atual {
+  background: var(--verde);
+}
+
+.passos li.atual {
+  opacity: 0.6;
+}
+
+h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.sub {
+  margin: 26px 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.largo {
+  width: 100%;
+  height: 48px;
+  margin-top: 8px;
+}
+
+mat-progress-bar {
+  margin-top: 12px;
+}
+
+.mat-icon[matPrefix] {
+  margin: 0 4px 0 12px;
+  color: var(--verde);
+}
+
+.alternativa {
+  margin: 18px 0 0;
+  text-align: center;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+/* ---------- Agência e conta ---------- */
+.banco {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: var(--raio);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  font-weight: 500;
+}
+
+.banco img {
+  width: 22px;
+  height: 22px;
+}
+
+.linha-conta {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+}
+
+.contatos {
+  display: grid;
+  gap: 8px;
+}
+
+.contato {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--borda);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.contato:hover {
+  border-color: var(--verde-borda);
+}
+
+.contato b {
+  display: block;
+  font-weight: 500;
+}
+
+.contato small {
+  color: var(--texto-suave);
+  font-size: 12px;
+}
+
+/* ---------- Valor ---------- */
+.para {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  padding: 14px 16px;
+  border-radius: var(--raio-grande);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+}
+
+.para .avatar {
+  width: 44px;
+  height: 44px;
+  font-size: 15px;
+}
+
+.para small {
+  display: block;
+  color: var(--texto-suave);
+  font-size: 12px;
+}
+
+.para b {
+  display: block;
+  font-size: 16px;
+}
+
+.campo-valor input {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.campo-valor [matTextPrefix] {
+  font-size: 20px;
+  color: var(--texto-suave);
+}
+
+/* ---------- Confirmar ---------- */
+.resumo {
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.resumo small {
+  color: var(--texto-suave);
+}
+
+.grande {
+  margin: 4px 0;
+  font-size: 38px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.detalhes {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 16px;
+  margin: 0 0 14px;
+  padding: 16px 18px;
+}
+
+.detalhes dt {
+  color: var(--texto-suave);
+}
+
+.detalhes dd {
+  margin: 0;
+  text-align: right;
+}
+
+.quebra {
+  overflow-wrap: anywhere;
+}
+
+.enviar {
+  height: 52px;
+  font-size: 15px;
+}
+
+/* ---------- Pronto ---------- */
+.pronto {
+  padding-top: 20px;
+  text-align: center;
+}
+
+.selo {
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--verde-suave);
+  color: var(--verde);
+  animation: surgir 0.35s ease-out;
+}
+
+.selo .mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+}
+
+.pronto h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 650;
+}
+
+.pronto p {
+  margin: 4px 0 26px;
+  line-height: 1.6;
+}
+
+.botoes {
+  display: grid;
+  gap: 8px;
+}
+
+.botoes > * {
+  height: 46px;
+}
+
+@keyframes surgir {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selo {
+    animation: none;
+  }
+}

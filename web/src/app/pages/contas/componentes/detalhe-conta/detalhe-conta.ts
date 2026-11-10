@@ -19,12 +19,13 @@ import { Observable, filter, switchMap } from 'rxjs';
 import { Confirmacao, DadosConfirmacao } from '../../../../common/confirmacao/confirmacao';
 import { mensagemDeErro } from '../../../../common/erros';
 import { CorAvatarPipe, IconeCategoriaPipe, IniciaisPipe } from '../../../../common/formatos';
+import { Icone } from '../../../../common/icone/icone';
 import { StatusConta } from '../../../../common/status-conta/status-conta';
 import { AcoesCliente } from '../../../clientes/services/acoes-cliente.service';
 import { ClienteService } from '../../../clientes/services/cliente.service';
 import { Conta, Periodo, Transacao } from '../../model/conta.model';
 import { ContaService, dataApi } from '../../services/conta.service';
-import { ComprovanteDialog } from '../comprovante/comprovante';
+import { ComprovanteDialog } from '../../../../common/comprovante/comprovante';
 import { DepositoDialog } from '../deposito/deposito';
 import { DetalheTransacaoPipe, SinalPipe, TituloTransacaoPipe } from '../transacao.pipes';
 
@@ -54,6 +55,7 @@ const ICONE_CHAVE = { CPF: 'badge', EMAIL: 'mail', TELEFONE: 'smartphone', ALEAT
     IniciaisPipe,
     CorAvatarPipe,
     IconeCategoriaPipe,
+    Icone,
     TituloTransacaoPipe,
     DetalheTransacaoPipe,
     SinalPipe,
@@ -186,7 +188,7 @@ export class DetalheConta {
   }
 
   protected abrirComprovante(t: Transacao): void {
-    this.dialog.open(ComprovanteDialog, { data: t.autenticacao });
+    this.dialog.open(ComprovanteDialog, { data: this.contas.comprovante(t.autenticacao) });
   }
 
   protected escolherAtalho(valor: Atalho): void {

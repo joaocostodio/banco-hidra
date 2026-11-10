@@ -1,40 +1,27 @@
-:host {
-  display: block;
-  min-height: 100vh;
-  padding-bottom: var(--altura-rodape);
-}
-
-.topo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 64px;
-  padding: 0 20px;
-  border-bottom: 1px solid var(--borda);
-}
-
-.conteudo {
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 32px 20px;
-}
-
 .ola {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.ola p {
   margin: 0;
   color: var(--texto-suave);
 }
 
-h1 {
-  margin: 0 0 20px;
-  font-size: 24px;
+.ola h1 {
+  margin: 0;
+  font-size: 26px;
   font-weight: 650;
 }
 
+/* ---------- Saldo ---------- */
 .saldo {
   position: relative;
   overflow: hidden;
-  padding: 22px;
-  border-radius: 20px;
+  padding: 18px 22px 20px;
+  border-radius: 22px;
   background: linear-gradient(140deg, #17543b, #0f241a 60%, #14171c);
   border: 1px solid var(--verde-borda);
 }
@@ -43,9 +30,9 @@ h1 {
   content: '';
   position: absolute;
   right: -30px;
-  bottom: -40px;
-  width: 170px;
-  height: 170px;
+  bottom: -46px;
+  width: 190px;
+  height: 190px;
   background: url('/hidra.svg') center / contain no-repeat;
   opacity: 0.12;
   pointer-events: none;
@@ -55,39 +42,155 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-right: -10px;
   color: var(--texto-suave);
   font-size: 13px;
 }
 
 .valor {
-  margin: 4px 0;
-  font-size: 32px;
+  margin: 0 0 8px;
+  font-size: 34px;
   font-weight: 650;
+  letter-spacing: -0.01em;
 }
 
-.conta {
+.valor.carregando {
+  height: 44px;
+}
+
+.dados-conta {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  margin-left: -10px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
   color: var(--prata);
   font-size: 12.5px;
+  cursor: pointer;
 }
 
-.em-breve {
+.dados-conta:hover {
+  background: rgb(255 255 255 / 6%);
+}
+
+.dados-conta .mat-icon {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+}
+
+.aviso {
   display: flex;
-  gap: 12px;
-  margin-top: 20px;
-  padding: 16px;
-  border-radius: var(--raio-grande);
-  background: var(--superficie);
-  border: 1px dashed var(--borda-forte);
-  color: var(--texto-suave);
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--raio);
+  background: var(--aviso-suave);
+  border: 1px solid var(--aviso-borda);
+  color: #f3cf97;
   font-size: 13px;
 }
 
-.em-breve b {
-  display: block;
+.aviso .mat-icon {
+  flex: none;
+  color: var(--aviso);
+}
+
+/* ---------- Atalhos ---------- */
+.atalhos {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.atalhos a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-radius: 14px;
+  color: var(--texto-suave);
+  font-size: 12.5px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.atalhos a:hover {
   color: var(--texto);
 }
 
-.em-breve .mat-icon {
-  flex: none;
-  color: var(--prata);
+.atalhos a:hover .bola {
+  border-color: var(--verde-borda);
+  background: var(--verde-suave);
+}
+
+.bola {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  color: var(--verde);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.bola .mat-icon {
+  font-size: 26px;
+  width: 26px;
+  height: 26px;
+}
+
+/* ---------- Convite para cadastrar chave ---------- */
+.convite {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-radius: var(--raio-grande);
+  border: 1px dashed var(--verde-borda);
+  background: var(--verde-suave);
+  color: var(--texto);
+  text-decoration: none;
+}
+
+.convite > span:nth-child(2) {
+  flex: 1;
+}
+
+.convite b {
+  display: block;
+}
+
+.convite small {
+  color: var(--texto-suave);
+  font-size: 12.5px;
+}
+
+.convite > .mat-icon {
+  color: var(--verde);
+}
+
+.lista .itens {
+  padding: 6px;
+}
+
+@media (max-width: 420px) {
+  .bola {
+    width: 52px;
+    height: 52px;
+  }
+
+  .atalhos a {
+    font-size: 11.5px;
+  }
 }

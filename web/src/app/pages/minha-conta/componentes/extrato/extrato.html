@@ -1,0 +1,80 @@
+<h1>Extrato</h1>
+
+<div class="filtros">
+  <mat-button-toggle-group
+    [value]="dias()"
+    (change)="dias.set($event.value)"
+    hideSingleSelectionIndicator
+    aria-label="Período"
+  >
+    <mat-button-toggle [value]="7">7 dias</mat-button-toggle>
+    <mat-button-toggle [value]="30">30 dias</mat-button-toggle>
+    <mat-button-toggle [value]="90">90 dias</mat-button-toggle>
+  </mat-button-toggle-group>
+
+  <mat-chip-listbox
+    aria-label="Tipo"
+    [value]="tipo()"
+    (change)="tipo.set($event.value ?? 'tudo')"
+    [hideSingleSelectionIndicator]="true"
+  >
+    <mat-chip-option value="tudo">Tudo</mat-chip-option>
+    <mat-chip-option value="ENTRADA">Entradas</mat-chip-option>
+    <mat-chip-option value="SAIDA">Saídas</mat-chip-option>
+  </mat-chip-listbox>
+</div>
+
+@if (extrato.value()) {
+  <div class="resumo">
+    <div class="cartao">
+      <small>Entrou</small>
+      <b class="num entrada">{{ minhaConta.saldoOculto() ? '••••' : (entradas() | currency: 'BRL') }}</b>
+    </div>
+    <div class="cartao">
+      <small>Saiu</small>
+      <b class="num saida">{{ minhaConta.saldoOculto() ? '••••' : (saidas() | currency: 'BRL') }}</b>
+    </div>
+  </div>
+}
+
+@if (extrato.isLoading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+@if (extrato.error()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ mensagemDeErro(extrato.error()) }}</div>
+}
+
+@if (extrato.value()) {
+  @if (grupos().length === 0) {
+    <div class="cartao vazio">
+      <mat-icon>receipt_long</mat-icon>
+      Nenhuma movimentação nos últimos {{ dias() }} dias.
+    </div>
+  }
+  @for (g of grupos(); track g.dia) {
+    <section class="dia">
+      <header>
+        <h2>
+          @if (nomeDoDia(g.dia); as nome) {
+            {{ nome }}
+          } @else {
+            {{ g.dia + 'T00:00' | date: "EEE, d 'de' MMM" }}
+          }
+        </h2>
+        @if (tipo() === 'tudo') {
+          <small>saldo do dia <span class="num">{{ minhaConta.saldoOculto() ? '••••' : (g.saldoFinal | currency: 'BRL') }}</span></small>
+        }
+      </header>
+      <div class="cartao itens">
+        @for (t of g.transacoes; track t.id) {
+          <app-item-transacao
+            [transacao]="t"
+            formatoData="hora"
+            [oculto]="minhaConta.saldoOculto()"
+            (abrir)="abrirComprovante($event)"
+          />
+        }
+      </div>
+    </section>
+  }
+}

@@ -9,6 +9,7 @@ import bancohidra.entity.Categoria;
 import bancohidra.entity.Conta;
 import bancohidra.entity.StatusConta;
 import bancohidra.entity.Transacao;
+import bancohidra.entity.Usuario;
 import bancohidra.exception.NaoEncontradoException;
 import bancohidra.security.Papeis;
 import bancohidra.security.UsuarioLogado;
@@ -51,6 +52,20 @@ public class MinhaContaController {
     @GET
     public ContaResponse conta() {
         return ContaResponse.de(logado.conta());
+    }
+
+    /** Dados do titular para a tela de perfil (o CPF aparece completo só para o próprio dono). */
+    @GET
+    @Path("/dados")
+    public MeusDadosResponse dados() {
+        Conta conta = logado.conta();
+        Usuario u = conta.titular;
+        return new MeusDadosResponse(u.nome, u.email, u.cpf == null ? null : Cpf.formatar(u.cpf),
+                conta.agencia, conta.numero, conta.status, u.criadoEm);
+    }
+
+    public record MeusDadosResponse(String nome, String email, String cpf, String agencia, String numero,
+                                    StatusConta status, java.time.LocalDateTime clienteDesde) {
     }
 
     @GET

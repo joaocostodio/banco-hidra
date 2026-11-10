@@ -1,0 +1,195 @@
+@if (passo() !== 'pronto') {
+  <header class="cabeca">
+    @if (passo() === 'destino') {
+      <a matIconButton [routerLink]="ehPix() ? '/app/pix' : '/app'" aria-label="Voltar"><mat-icon>arrow_back</mat-icon></a>
+    } @else {
+      <button matIconButton (click)="voltar()" aria-label="Voltar"><mat-icon>arrow_back</mat-icon></button>
+    }
+    <h1>{{ titulo() }}</h1>
+  </header>
+
+  <ol class="passos" aria-label="Etapas">
+    @for (p of passos; track p; let i = $index) {
+      <li [class.feito]="indice(passo()) > i" [class.atual]="passo() === p"></li>
+    }
+  </ol>
+}
+
+@if (erro()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+}
+
+@switch (passo()) {
+  <!-- ============ 1. Para quem ============ -->
+  @case ('destino') {
+    <h2>{{ ehPix() ? 'Para quem você quer mandar?' : 'Para qual conta?' }}</h2>
+
+    @if (ehPix()) {
+      <form [formGroup]="destinoPix" (ngSubmit)="buscarDestino()" novalidate>
+        <mat-form-field>
+          <mat-label>Chave Pix</mat-label>
+          <mat-icon matPrefix svgIcon="pix" />
+          <input #foco matInput formControlName="chave" autocomplete="off" />
+          <mat-hint>CPF, e-mail, celular ou chave aleatória</mat-hint>
+          <mat-error>Digite a chave Pix de quem vai receber</mat-error>
+        </mat-form-field>
+        <button matButton="filled" class="largo" type="submit" [disabled]="ocupado()">Continuar</button>
+      </form>
+      <p class="alternativa">
+        Não tem a chave? <a routerLink="/app/transferir">Transfira com agência e conta</a>
+      </p>
+    } @else {
+      <form [formGroup]="destinoConta" (ngSubmit)="buscarDestino()" novalidate>
+        <div class="banco"><img src="hidra.svg" alt="" />Banco Hidra</div>
+        <div class="linha-conta">
+          <mat-form-field class="agencia">
+            <mat-label>Agência</mat-label>
+            <input matInput class="num" formControlName="agencia" inputmode="numeric" maxlength="4" />
+            <mat-error>4 dígitos</mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Conta</mat-label>
+            <input
+              #foco
+              matInput
+              class="num"
+              formControlName="numero"
+              inputmode="numeric"
+              placeholder="000000-0"
+              maxlength="8"
+              (input)="formatarNumero()"
+              autocomplete="off"
+            />
+            <mat-error>Número com dígito, ex. 123456-7</mat-error>
+          </mat-form-field>
+        </div>
+        <button matButton="filled" class="largo" type="submit" [disabled]="ocupado()">Continuar</button>
+      </form>
+
+      @if (contatos().length > 0) {
+        <h3 class="sub">Transferir de novo</h3>
+        <div class="contatos">
+          @for (c of contatos(); track c.conta) {
+            <button class="contato" (click)="usarContato(c)" [disabled]="ocupado()">
+              <span class="avatar prata">{{ c.nome | iniciais }}</span>
+              <span>
+                <b>{{ c.nome }}</b>
+                <small class="num">0001 / {{ c.conta }}</small>
+              </span>
+            </button>
+          }
+        </div>
+      }
+    }
+    @if (ocupado()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+  }
+
+  <!-- ============ 2. Quanto ============ -->
+  @case ('valor') {
+    @if (destinatario(); as d) {
+      <div class="para">
+        <span class="avatar">{{ d.nome | iniciais }}</span>
+        <div>
+          <small>Para</small>
+          <b>{{ d.nome }}</b>
+          <small class="num">CPF {{ d.cpfMascarado }}</small>
+        </div>
+      </div>
+    }
+
+    <form [formGroup]="valores" (ngSubmit)="continuarValor()" novalidate>
+      <h2>Quanto?</h2>
+      <mat-form-field class="campo-valor">
+        <span matTextPrefix>R$&nbsp;</span>
+        <input #foco matInput class="num" formControlName="valor" inputmode="decimal" placeholder="0,00" autocomplete="off" />
+        @if (valores.controls.valor.hasError('saldo')) {
+          <mat-error>Saldo insuficiente</mat-error>
+        } @else if (valores.controls.valor.hasError('valor')) {
+          <mat-error>{{ valores.controls.valor.getError('valor') }}</mat-error>
+        } @else {
+          <mat-error>Digite o valor</mat-error>
+        }
+        @if (minha.value(); as c) {
+          <mat-hint>Saldo disponível: {{ c.saldo | currency: 'BRL' }}</mat-hint>
+        }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Mensagem (opcional)</mat-label>
+        <input matInput formControlName="descricao" maxlength="140" autocomplete="off" />
+        <mat-hint align="end">{{ valores.controls.descricao.value.length }}/140</mat-hint>
+      </mat-form-field>
+
+      <button matButton="filled" class="largo" type="submit">Continuar</button>
+    </form>
+  }
+
+  <!-- ============ 3. Confirmar ============ -->
+  @case ('confirmar') {
+    @if (destinatario(); as d) {
+      <div class="resumo">
+        <small>Você está {{ ehPix() ? 'enviando um Pix de' : 'transferindo' }}</small>
+        <div class="grande num">{{ valor() | currency: 'BRL' }}</div>
+        <small>Saldo depois: {{ saldoDepois() | currency: 'BRL' }}</small>
+      </div>
+
+      <dl class="cartao detalhes">
+        <dt>Para</dt>
+        <dd><b>{{ d.nome }}</b></dd>
+        <dt>CPF</dt>
+        <dd class="num">{{ d.cpfMascarado }}</dd>
+        @if (ehPix() && d.tipoChave) {
+          <dt>Chave ({{ nomeTipoChave[d.tipoChave] }})</dt>
+          <dd class="num quebra">{{ destinoPix.controls.chave.value }}</dd>
+        }
+        <dt>Banco</dt>
+        <dd>{{ d.banco }}</dd>
+        <dt>Agência / conta</dt>
+        <dd class="num">{{ d.agencia }} / {{ d.conta }}</dd>
+        @if (valores.controls.descricao.value) {
+          <dt>Mensagem</dt>
+          <dd class="quebra">{{ valores.controls.descricao.value }}</dd>
+        }
+      </dl>
+
+      <button matButton="filled" class="largo enviar" (click)="enviar()" [disabled]="ocupado()">
+        @if (ehPix()) {
+          <mat-icon svgIcon="pix" />
+        } @else {
+          <mat-icon>swap_horiz</mat-icon>
+        }
+        {{ ehPix() ? 'Enviar Pix' : 'Transferir agora' }}
+      </button>
+      @if (ocupado()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+    }
+  }
+
+  <!-- ============ 4. Pronto ============ -->
+  @case ('pronto') {
+    @if (resultado(); as t) {
+      <section class="pronto">
+        <div class="selo"><mat-icon class="icone-cheio">check_circle</mat-icon></div>
+        <h1>{{ ehPix() ? 'Pix enviado!' : 'Transferência feita!' }}</h1>
+        <div class="grande num">{{ t.valor | currency: 'BRL' }}</div>
+        <p>
+          para <b>{{ t.contraparteNome }}</b><br />
+          <span class="muted">{{ t.dataHora | date: "dd/MM/yyyy 'às' HH:mm" }}</span>
+        </p>
+        <div class="botoes">
+          <button matButton="filled" (click)="abrirComprovante()">
+            <mat-icon>receipt_long</mat-icon>
+            Ver comprovante
+          </button>
+          <button matButton="outlined" (click)="recomecar()">
+            {{ ehPix() ? 'Fazer outro Pix' : 'Nova transferência' }}
+          </button>
+          <a matButton routerLink="/app">Voltar ao início</a>
+        </div>
+      </section>
+    }
+  }
+}

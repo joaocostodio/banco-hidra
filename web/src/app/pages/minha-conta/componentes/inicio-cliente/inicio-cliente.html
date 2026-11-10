@@ -1,45 +1,105 @@
-<header class="topo">
-  <app-marca />
-  <span class="espaco"></span>
-  <button matButton (click)="trocarSenha()"><mat-icon>key</mat-icon>Trocar senha</button>
-  <button matButton (click)="auth.sair()"><mat-icon>logout</mat-icon>Sair</button>
-</header>
+<div class="ola">
+  <div>
+    <p>{{ saudacao }},</p>
+    <h1>{{ auth.primeiroNome() }}</h1>
+  </div>
+  <button matIconButton (click)="atualizar()" matTooltip="Atualizar" aria-label="Atualizar">
+    <mat-icon>refresh</mat-icon>
+  </button>
+</div>
 
-<main class="conteudo">
-  <p class="ola">Olá,</p>
-  <h1>{{ auth.usuario()?.nome }}</h1>
+@if (erro()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+}
 
-  @if (conta.isLoading()) {
+<section class="saldo">
+  <div class="rot">
+    Saldo disponível
+    <button
+      matIconButton
+      (click)="minhaConta.alternarSaldo()"
+      [attr.aria-label]="minhaConta.saldoOculto() ? 'Mostrar saldo' : 'Esconder saldo'"
+      [matTooltip]="minhaConta.saldoOculto() ? 'Mostrar saldo' : 'Esconder saldo'"
+    >
+      <mat-icon>{{ minhaConta.saldoOculto() ? 'visibility_off' : 'visibility' }}</mat-icon>
+    </button>
+  </div>
+  @if (conta.value(); as c) {
+    <div class="valor num">
+      @if (minhaConta.saldoOculto()) {
+        R$ ••••••
+      } @else {
+        {{ c.saldo | currency: 'BRL' }}
+      }
+    </div>
+    <button class="dados-conta" (click)="copiarConta(c.agencia, c.numero)" matTooltip="Copiar agência e conta">
+      <span class="num">Ag {{ c.agencia }} · CC {{ c.numero }}</span>
+      <mat-icon>content_copy</mat-icon>
+    </button>
+  } @else {
+    <div class="valor carregando"></div>
     <mat-progress-bar mode="indeterminate" />
   }
-  @if (conta.error()) {
-    <div class="erro-geral"><mat-icon>error</mat-icon>{{ mensagemDeErro(conta.error()) }}</div>
-  }
+</section>
 
-  @if (conta.value(); as c) {
-    <section class="saldo">
-      <div class="rot">
-        Saldo disponível
-        <button
-          matIconButton
-          (click)="ocultar.set(!ocultar())"
-          [attr.aria-label]="ocultar() ? 'Mostrar saldo' : 'Esconder saldo'"
-        >
-          <mat-icon>{{ ocultar() ? 'visibility_off' : 'visibility' }}</mat-icon>
-        </button>
-      </div>
-      <div class="valor num">{{ ocultar() ? 'R$ ••••••' : (c.saldo | currency: 'BRL') }}</div>
-      <div class="conta num">Ag {{ c.agencia }} · CC {{ c.numero }}</div>
-    </section>
-  }
-
-  <div class="em-breve">
-    <mat-icon>construction</mat-icon>
-    <div>
-      <b>O app do cliente está sendo construído.</b>
-      Extrato, Pix, transferências e comprovantes chegam na próxima etapa.
-    </div>
+@if (conta.value()?.status === 'BLOQUEADA') {
+  <div class="aviso">
+    <mat-icon>lock</mat-icon>
+    <span>Sua conta está <b>bloqueada</b>: não dá para enviar nem receber dinheiro. Fale com o banco.</span>
   </div>
-</main>
+}
 
-<app-rodape />
+<nav class="atalhos" aria-label="Atalhos">
+  <a routerLink="/app/pix/enviar">
+    <span class="bola"><mat-icon svgIcon="pix" /></span>
+    Pix
+  </a>
+  <a routerLink="/app/transferir">
+    <span class="bola"><mat-icon>swap_horiz</mat-icon></span>
+    Transferir
+  </a>
+  <a routerLink="/app/pix">
+    <span class="bola"><mat-icon>key</mat-icon></span>
+    Minhas chaves
+  </a>
+  <a routerLink="/app/extrato">
+    <span class="bola"><mat-icon>receipt_long</mat-icon></span>
+    Extrato
+  </a>
+</nav>
+
+@if (chaves.value()?.length === 0) {
+  <a class="convite" routerLink="/app/pix" [queryParams]="{ nova: 1 }">
+    <span class="ico-tx entrada"><mat-icon svgIcon="pix" /></span>
+    <span>
+      <b>Cadastre uma chave Pix</b>
+      <small>Com ela, seus amigos te mandam dinheiro só com o seu e-mail, CPF ou celular.</small>
+    </span>
+    <mat-icon>chevron_right</mat-icon>
+  </a>
+}
+
+<section class="cartao lista">
+  <div class="cartao-cab">
+    <h3>Últimas transações</h3>
+    <span class="espaco"></span>
+    <a matButton routerLink="/app/extrato">Ver extrato</a>
+  </div>
+  @if (recentes.isLoading() && !recentes.value()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+  @if (recentes.value()) {
+    @if (ultimas().length === 0) {
+      <div class="vazio">
+        <mat-icon>receipt_long</mat-icon>
+        Nenhuma transação ainda.
+      </div>
+    } @else {
+      <div class="itens">
+        @for (t of ultimas(); track t.id) {
+          <app-item-transacao [transacao]="t" [oculto]="minhaConta.saldoOculto()" (abrir)="abrirComprovante($event)" />
+        }
+      </div>
+    }
+  }
+</section>

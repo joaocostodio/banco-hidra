@@ -1,0 +1,20 @@
+@let t = transacao();
+<button type="button" matRipple class="item" (click)="abrir.emit(t)" [attr.aria-label]="'Ver comprovante: ' + (t | tituloTransacao)">
+  <span class="ico-tx" [class.entrada]="t.tipo === 'ENTRADA'">
+    <app-icone [nome]="t.categoria | iconeCategoria" />
+  </span>
+  <span class="texto">
+    <b>{{ t | tituloTransacao }}</b>
+    <small>{{ t | detalheTransacao }}</small>
+  </span>
+  <span class="lado">
+    <span class="valor num" [class.entrada]="t.tipo === 'ENTRADA'">
+      @if (oculto()) {
+        ••••
+      } @else {
+        {{ t | sinal }} {{ t.valor | currency: 'BRL' }}
+      }
+    </span>
+    <small>{{ t.dataHora | date: (formatoData() === 'hora' ? 'HH:mm' : 'dd/MM · HH:mm') }}</small>
+  </span>
+</button>

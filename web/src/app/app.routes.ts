@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { exigePerfil, inicioGuard } from './common/auth/auth.guards';
 import { LayoutAdmin } from './common/layout-admin/layout-admin';
+import { LayoutCliente } from './common/layout-cliente/layout-cliente';
 import { ACESSO_ROUTES } from './pages/acesso/routes/acesso.routes';
 
 export const routes: Routes = [
@@ -34,11 +35,17 @@ export const routes: Routes = [
     ],
   },
 
-  // App do cliente (etapa 4)
+  // App do cliente
   {
     path: 'app',
+    component: LayoutCliente,
     canActivate: [exigePerfil('CLIENTE')],
-    loadChildren: () => import('./pages/minha-conta/routes/minha-conta.routes').then((m) => m.MINHA_CONTA_ROUTES),
+    // As rotas da conta (início, extrato, perfil) e as do Pix ficam no mesmo nível: /app, /app/pix, /app/extrato...
+    loadChildren: () =>
+      Promise.all([
+        import('./pages/minha-conta/routes/minha-conta.routes'),
+        import('./pages/pix/routes/pix.routes'),
+      ]).then(([conta, pix]) => [...conta.MINHA_CONTA_ROUTES, ...pix.PIX_ROUTES]),
   },
 
   { path: '**', redirectTo: '' },

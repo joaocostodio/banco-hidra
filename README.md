@@ -51,7 +51,7 @@ que validam valor e saldo disponível.
 - [x] 1. API base: Postgres, entidades, controllers de categoria, conta e transação, transferência com validação
 - [x] 2. Login e perfis (JWT)
 - [x] 3. Painel ADM (Angular + Material com o tema da Hidra; esboço das telas em `docs/esboco/index.html`)
-- [ ] 4. App do cliente: saldo, extrato, Pix
+- [x] 4. App do cliente: saldo, extrato, Pix (enviar e chaves), transferência, comprovante, perfil
 - [ ] 5. Extras: QR code, boleto, comprovante, testes
 
 ## API
@@ -96,11 +96,12 @@ O administrador não transfere dinheiro de clientes: só deposita. Transferênci
 | Método | Rota | O que faz |
 |---|---|---|
 | GET | `/minha-conta` | Conta e saldo |
+| GET | `/minha-conta/dados` | Nome, e-mail, CPF, agência e conta (tela de perfil) |
 | GET | `/minha-conta/extrato?inicio=&fim=` | Extrato |
 | GET | `/minha-conta/destinatario?agencia=&numero=` | De quem é a conta, antes de transferir |
 | POST | `/minha-conta/transferencias` | `agencia`, `numero`, `valor`, `descricao` |
 | GET | `/minha-conta/comprovantes/{autenticacao}` | Comprovante (só se a conta participou) |
-| GET/POST | `/minha-conta/pix/chaves` | Lista / cadastra chave (`tipo`: CPF, EMAIL, TELEFONE, ALEATORIA; `valor`) |
+| GET/POST | `/minha-conta/pix/chaves` | Lista / cadastra chave (`tipo`: CPF, EMAIL, TELEFONE, ALEATORIA; `valor` — em branco, CPF e e-mail usam os do titular) |
 | DELETE | `/minha-conta/pix/chaves/{id}` | Exclui chave |
 | GET | `/minha-conta/pix/destinatario?chave=` | Quem recebe (nome e CPF mascarado) antes de confirmar |
 | POST | `/minha-conta/pix` | Envia Pix (`chave`, `valor`, `descricao`) |
@@ -137,7 +138,7 @@ Requisitos: Docker e JDK 21.
 ```bash
 docker compose up -d          # PostgreSQL em localhost:5433
 cd api && ./mvnw quarkus:dev  # API em http://localhost:8080
-cd api && ./mvnw test         # 28 testes (os de API sobem um Postgres descartável)
+cd api && ./mvnw test         # 30 testes (os de API sobem um Postgres descartável)
 cd web && npm install && npm start   # site em http://localhost:4300
 ```
 
@@ -152,5 +153,9 @@ HTML/CSS separados do TypeScript e a estrutura `pages/<funcionalidade>/{model,se
   provisória vai para `/primeiro-acesso` e não sai de lá sem criar a própria senha.
 - **Painel ADM:** painel inicial, clientes (busca, filtros, cadastro, edição, nova senha provisória), contas
   (extrato por período, chaves Pix, depósito, bloqueio, encerramento), movimentações com comprovante e categorias.
+- **App do cliente** (`/app`): início com saldo (dá para esconder), atalhos e últimas transações; extrato agrupado
+  por dia; Pix e transferência na mesma tela de envio em 4 passos (para quem → quanto → confirmar → pronto),
+  mostrando nome e CPF mascarado de quem recebe antes de confirmar; minhas chaves Pix; comprovante; perfil.
+  No celular, as abas ficam embaixo.
 - `common/` tem o que é reaproveitado: sessão e interceptor do token, guardas de rota, validações (CPF, senha, valor),
   marca, rodapé e diálogos.

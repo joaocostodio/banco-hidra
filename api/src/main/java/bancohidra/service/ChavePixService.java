@@ -35,7 +35,8 @@ public class ChavePixService {
             throw new RegraNegocioException("Limite de " + ChavePix.LIMITE_POR_CONTA + " chaves por conta atingido");
         }
 
-        String valor = tipo == TipoChavePix.ALEATORIA ? UUID.randomUUID().toString() : normalizar(tipo, valorInformado);
+        String valor = tipo == TipoChavePix.ALEATORIA ? UUID.randomUUID().toString()
+                : normalizar(tipo, valorOuDoTitular(tipo, valorInformado, conta));
         if (tipo == TipoChavePix.CPF && !valor.equals(conta.titular.cpf)) {
             throw new RegraNegocioException("A chave CPF deve ser o CPF do titular da conta");
         }
@@ -49,6 +50,18 @@ public class ChavePixService {
         chave.conta = conta;
         chave.persist();
         return chave;
+    }
+
+    /** CPF ou e-mail em branco: usa o do titular ("cadastrar meu CPF" sem precisar digitar). */
+    private static String valorOuDoTitular(TipoChavePix tipo, String informado, Conta conta) {
+        if (informado != null && !informado.isBlank()) {
+            return informado;
+        }
+        return switch (tipo) {
+            case CPF -> conta.titular.cpf;
+            case EMAIL -> conta.titular.email;
+            default -> informado;
+        };
     }
 
     @Transactional

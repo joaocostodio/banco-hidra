@@ -1,0 +1,66 @@
+@if (dados.isLoading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+@if (dados.error()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ mensagemDeErro(dados.error()) }}</div>
+}
+
+@if (dados.value(); as d) {
+  <section class="cabeca">
+    <span class="avatar grande">{{ d.nome | iniciais }}</span>
+    <h1>{{ d.nome }}</h1>
+    <p>cliente desde {{ d.clienteDesde | date: "MMMM 'de' y" }}</p>
+  </section>
+
+  <section class="cartao">
+    <div class="cartao-cab">
+      <h3>Minha conta</h3>
+      <span class="espaco"></span>
+      <app-status-conta [status]="d.status" />
+    </div>
+    <dl>
+      <dt>Banco</dt>
+      <dd>Banco Hidra</dd>
+      <dt>Agência</dt>
+      <dd class="num">{{ d.agencia }}</dd>
+      <dt>Conta corrente</dt>
+      <dd class="num">{{ d.numero }}</dd>
+    </dl>
+    <div class="rodape-cartao">
+      <button matButton="tonal" (click)="copiarDados(d)">
+        <mat-icon>content_copy</mat-icon>
+        Copiar dados para receber
+      </button>
+    </div>
+  </section>
+
+  <section class="cartao">
+    <div class="cartao-cab"><h3>Dados pessoais</h3></div>
+    <dl>
+      <dt>Nome</dt>
+      <dd>{{ d.nome }}</dd>
+      <dt>CPF</dt>
+      <dd class="num">{{ d.cpf ?? '—' }}</dd>
+      <dt>E-mail de acesso</dt>
+      <dd>{{ d.email }}</dd>
+    </dl>
+    <p class="nota">Para mudar nome ou e-mail, fale com o banco.</p>
+  </section>
+
+  <section class="cartao">
+    <mat-action-list>
+      <a mat-list-item routerLink="/app/pix">
+        <mat-icon matListItemIcon svgIcon="pix" />
+        <span matListItemTitle>Minhas chaves Pix</span>
+      </a>
+      <button mat-list-item (click)="trocarSenha()">
+        <mat-icon matListItemIcon>key</mat-icon>
+        <span matListItemTitle>Trocar senha</span>
+      </button>
+      <button mat-list-item (click)="auth.sair()">
+        <mat-icon matListItemIcon>logout</mat-icon>
+        <span matListItemTitle>Sair</span>
+      </button>
+    </mat-action-list>
+  </section>
+}

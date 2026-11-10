@@ -12,7 +12,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { mensagemDeErro } from '../../../../common/erros';
 import { IconeCategoriaPipe } from '../../../../common/formatos';
-import { ComprovanteDialog } from '../../../contas/componentes/comprovante/comprovante';
+import { Icone } from '../../../../common/icone/icone';
+import { ComprovanteDialog } from '../../../../common/comprovante/comprovante';
 import { DetalheTransacaoPipe, SinalPipe, TituloTransacaoPipe } from '../../../contas/componentes/transacao.pipes';
 import { Transacao } from '../../../contas/model/conta.model';
 import { ContaService } from '../../../contas/services/conta.service';
@@ -35,6 +36,7 @@ const LIMITE = 200;
     CurrencyPipe,
     DatePipe,
     IconeCategoriaPipe,
+    Icone,
     TituloTransacaoPipe,
     DetalheTransacaoPipe,
     SinalPipe,
@@ -73,6 +75,6 @@ export class Movimentacoes {
   }
 
   protected abrirComprovante(t: Transacao): void {
-    this.dialog.open(ComprovanteDialog, { data: t.autenticacao });
+    this.dialog.open(ComprovanteDialog, { data: this.contas.comprovante(t.autenticacao) });
   }
 }

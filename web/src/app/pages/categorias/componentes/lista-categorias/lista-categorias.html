@@ -21,7 +21,7 @@
 <div class="grade">
   @for (c of ordenadas(); track c.id) {
     <article class="cartao categoria" [class.sistema]="c.sistema">
-      <span class="bolha"><mat-icon>{{ c.descricao | iconeCategoria }}</mat-icon></span>
+      <span class="bolha"><app-icone [nome]="c.descricao | iconeCategoria" /></span>
       <div class="texto">
         <h3>{{ c.descricao }}</h3>
         <small>

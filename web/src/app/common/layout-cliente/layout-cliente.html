@@ -1,0 +1,58 @@
+<header class="topo">
+  <a routerLink="/app" class="logo" aria-label="Início"><app-marca /></a>
+
+  <nav class="abas-topo" aria-label="Menu">
+    @for (a of abas; track a.rota) {
+      <a
+        matButton
+        [routerLink]="a.rota"
+        routerLinkActive="ativa"
+        #rla="routerLinkActive"
+        [routerLinkActiveOptions]="{ exact: !!a.exato }"
+        [attr.aria-current]="rla.isActive ? 'page' : null"
+      >
+        @if (a.icone === 'pix') {
+          <mat-icon svgIcon="pix" />
+        } @else {
+          <mat-icon [class.icone-cheio]="rla.isActive">{{ a.icone }}</mat-icon>
+        }
+        {{ a.nome }}
+      </a>
+    }
+  </nav>
+
+  <span class="espaco"></span>
+  <button class="usuario" matIconButton [matMenuTriggerFor]="menu" aria-label="Minha conta">
+    <span class="avatar">{{ auth.usuario()?.nome | iniciais }}</span>
+  </button>
+  <mat-menu #menu="matMenu" xPosition="before">
+    <div class="quem" mat-menu-item disabled>
+      <b>{{ auth.usuario()?.nome }}</b>
+      <small>{{ auth.usuario()?.email }}</small>
+    </div>
+    <a mat-menu-item routerLink="/app/perfil"><mat-icon>person</mat-icon>Meu perfil</a>
+    <button mat-menu-item (click)="trocarSenha()"><mat-icon>key</mat-icon>Trocar senha</button>
+    <button mat-menu-item (click)="auth.sair()"><mat-icon>logout</mat-icon>Sair</button>
+  </mat-menu>
+</header>
+
+<main class="conteudo">
+  <router-outlet />
+</main>
+
+<nav class="abas-baixo" aria-label="Menu">
+  @for (a of abas; track a.rota) {
+    <a
+      [routerLink]="a.rota"
+      routerLinkActive="ativa"
+      #rlb="routerLinkActive"
+      [routerLinkActiveOptions]="{ exact: !!a.exato }"
+      [attr.aria-current]="rlb.isActive ? 'page' : null"
+    >
+      <app-icone [nome]="a.icone" [cheio]="rlb.isActive" />
+      <span>{{ a.nome }}</span>
+    </a>
+  }
+</nav>
+
+<app-rodape />

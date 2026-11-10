@@ -1,0 +1,77 @@
+<h1>Pix</h1>
+
+<div class="acoes">
+  <a class="acao principal" routerLink="/app/pix/enviar">
+    <span class="bola"><mat-icon>send</mat-icon></span>
+    <span>
+      <b>Enviar Pix</b>
+      <small>com CPF, e-mail, celular ou chave aleatória</small>
+    </span>
+    <mat-icon>chevron_right</mat-icon>
+  </a>
+  <a class="acao" routerLink="/app/transferir">
+    <span class="bola"><mat-icon>swap_horiz</mat-icon></span>
+    <span>
+      <b>Transferir</b>
+      <small>com agência e conta</small>
+    </span>
+    <mat-icon>chevron_right</mat-icon>
+  </a>
+</div>
+
+@if (erro()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+}
+
+<section class="cartao">
+  <div class="cartao-cab">
+    <h3>Minhas chaves</h3>
+    @if (chaves.value(); as lista) {
+      <span class="muted contagem">{{ lista.length }} de {{ limite }}</span>
+    }
+    <span class="espaco"></span>
+    <span [matTooltip]="cheio() ? 'Limite de ' + limite + ' chaves atingido' : ''">
+      <button matButton="tonal" (click)="cadastrar()" [disabled]="cheio() || !dados.value()">
+        <mat-icon>add</mat-icon>
+        Cadastrar
+      </button>
+    </span>
+  </div>
+
+  @if (chaves.isLoading() && !chaves.value()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (chaves.value(); as lista) {
+    @if (lista.length === 0) {
+      <div class="vazio">
+        <mat-icon>key_off</mat-icon>
+        Você ainda não tem chave Pix.<br />
+        Cadastre uma para receber dinheiro sem passar agência e conta.
+      </div>
+    } @else {
+      <ul>
+        @for (c of lista; track c.id) {
+          <li>
+            <span class="ico-tx entrada"><mat-icon>{{ icones[c.tipo] }}</mat-icon></span>
+            <span class="texto">
+              <b class="num">{{ c.valor | chaveLegivel: c.tipo }}</b>
+              <small>{{ nomes[c.tipo] }} · desde {{ c.criadaEm | date: 'dd/MM/yyyy' }}</small>
+            </span>
+            <button matIconButton (click)="copiar(c)" matTooltip="Copiar chave" aria-label="Copiar chave">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+            <button matIconButton (click)="excluir(c)" matTooltip="Excluir chave" aria-label="Excluir chave">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>
+
+<p class="dica">
+  <mat-icon>lightbulb</mat-icon>
+  Para receber, passe uma das suas chaves para quem vai te pagar. O dinheiro cai na hora.
+</p>
