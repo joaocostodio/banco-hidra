@@ -1,0 +1,46 @@
+<h2 mat-dialog-title>Depositar</h2>
+<form [formGroup]="form" (ngSubmit)="depositar()" novalidate>
+  <mat-dialog-content class="dialogo-largo">
+    <p class="para">
+      Na conta de <b>{{ conta.titularNome }}</b>
+      <span class="num muted">· Ag {{ conta.agencia }} · CC {{ conta.numero }}</span>
+    </p>
+
+    @if (erro()) {
+      <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+    }
+
+    <mat-form-field class="valor">
+      <mat-label>Valor</mat-label>
+      <span matTextPrefix>R$&nbsp;</span>
+      <input matInput class="num" formControlName="valor" inputmode="decimal" placeholder="0,00" autocomplete="off" cdkFocusInitial />
+      @if (form.controls.valor.hasError('valor')) {
+        <mat-error>{{ form.controls.valor.getError('valor') }}</mat-error>
+      } @else {
+        <mat-error>Informe o valor</mat-error>
+      }
+      @if (saldoDepois(); as depois) {
+        <mat-hint>Saldo depois do depósito: {{ depois | currency: 'BRL' }}</mat-hint>
+      }
+    </mat-form-field>
+
+    <div class="atalhos">
+      @for (a of atalhos; track a) {
+        <button matButton="outlined" type="button" (click)="usarAtalho(a)">{{ a | currency: 'BRL' : 'symbol' : '1.0-0' }}</button>
+      }
+    </div>
+
+    <mat-form-field>
+      <mat-label>Descrição (opcional)</mat-label>
+      <input matInput formControlName="descricao" placeholder="Ex.: crédito inicial, salário" autocomplete="off" />
+      <mat-hint align="end">{{ form.controls.descricao.value.length }}/200</mat-hint>
+    </mat-form-field>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button matButton type="button" mat-dialog-close>Cancelar</button>
+    <button matButton="filled" type="submit" [disabled]="enviando()">
+      <mat-icon>add</mat-icon>
+      Depositar
+    </button>
+  </mat-dialog-actions>
+</form>

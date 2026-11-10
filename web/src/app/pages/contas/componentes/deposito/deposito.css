@@ -1,0 +1,20 @@
+.para {
+  margin: 0 0 18px;
+  color: var(--texto);
+}
+
+.valor input {
+  font-size: 20px;
+}
+
+.atalhos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0 18px;
+}
+
+.atalhos button {
+  height: 32px;
+  font-size: 13px;
+}

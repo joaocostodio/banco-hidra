@@ -1,0 +1,46 @@
+<mat-dialog-content>
+  <div class="sucesso"><mat-icon class="icone-cheio">{{ dados.novo ? 'check_circle' : 'key' }}</mat-icon></div>
+  <h2>{{ dados.novo ? 'Conta aberta!' : 'Nova senha provisória' }}</h2>
+  <p class="sub">
+    @if (dados.novo) {
+      {{ dados.cliente.nome }} já é cliente do Banco Hidra.
+    } @else {
+      A senha anterior de {{ dados.cliente.nome }} deixou de valer e o acesso foi desbloqueado.
+    }
+  </p>
+
+  <dl>
+    @if (dados.cliente.conta; as conta) {
+      <dt>Agência / conta</dt>
+      <dd class="num">{{ conta.agencia }} / {{ conta.numero }}</dd>
+    }
+    <dt>E-mail de acesso</dt>
+    <dd>{{ dados.cliente.email }}</dd>
+  </dl>
+
+  <div class="senha-box">
+    <div class="rot">Senha provisória</div>
+    <div class="senha">{{ dados.senha }}</div>
+    <div class="botoes">
+      <button matButton="outlined" (click)="copiarSenha()">
+        <mat-icon>{{ copiado() === 'senha' ? 'check' : 'content_copy' }}</mat-icon>
+        {{ copiado() === 'senha' ? 'Copiada' : 'Copiar senha' }}
+      </button>
+      <button matButton="outlined" (click)="copiarMensagem()">
+        <mat-icon>{{ copiado() === 'mensagem' ? 'check' : 'forward_to_inbox' }}</mat-icon>
+        {{ copiado() === 'mensagem' ? 'Copiada' : 'Copiar mensagem' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="aviso">
+    <mat-icon>visibility_off</mat-icon>
+    <span>
+      Esta senha não será mostrada de novo (o banco guarda só uma versão embaralhada dela). Se ela se perder, gere outra
+      em <b>⋮ → Nova senha provisória</b>.
+    </span>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button matButton="filled" [mat-dialog-close]="true">Concluir</button>
+</mat-dialog-actions>

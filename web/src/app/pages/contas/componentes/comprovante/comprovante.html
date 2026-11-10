@@ -1,0 +1,53 @@
+<mat-dialog-content>
+  @if (comprovante.isLoading()) {
+    <mat-progress-bar mode="indeterminate" />
+  } @else if (comprovante.error()) {
+    <div class="erro-geral"><mat-icon>error</mat-icon>{{ mensagemDeErro(comprovante.error()) }}</div>
+  } @else if (comprovante.value(); as c) {
+    <div class="cabeca">
+      <img src="hidra.svg" alt="" />
+      <div>
+        <b>Comprovante</b>
+        <small>{{ c.categoria }} · {{ c.dataHora | date: "dd/MM/yyyy 'às' HH:mm:ss" }}</small>
+      </div>
+      <span class="ico-tx entrada"><mat-icon>{{ c.categoria | iconeCategoria }}</mat-icon></span>
+    </div>
+
+    <div class="valor num">{{ c.valor | currency: 'BRL' }}</div>
+    @if (c.descricao) {
+      <p class="descricao">“{{ c.descricao }}”</p>
+    }
+
+    <div class="partes">
+      @if (c.origem; as o) {
+        <div class="parte">
+          <span class="rot">De</span>
+          <b>{{ o.nome }}</b>
+          <small class="num">Banco Hidra · Ag {{ o.agencia }} · CC {{ o.conta }}</small>
+        </div>
+      } @else {
+        <div class="parte">
+          <span class="rot">De</span>
+          <b>Banco Hidra</b>
+          <small>Depósito feito pelo banco</small>
+        </div>
+      }
+      <mat-icon class="seta">south</mat-icon>
+      @if (c.destino; as d) {
+        <div class="parte">
+          <span class="rot">Para</span>
+          <b>{{ d.nome }}</b>
+          <small class="num">Banco Hidra · Ag {{ d.agencia }} · CC {{ d.conta }}</small>
+        </div>
+      }
+    </div>
+
+    <div class="autenticacao">
+      <span class="rot">Autenticação</span>
+      <code>{{ c.autenticacao }}</code>
+    </div>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button matButton="filled" mat-dialog-close>Fechar</button>
+</mat-dialog-actions>

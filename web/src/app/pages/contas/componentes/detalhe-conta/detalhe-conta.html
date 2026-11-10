@@ -1,0 +1,213 @@
+<a matButton routerLink="/admin/contas" class="voltar">
+  <mat-icon>arrow_back</mat-icon>
+  Contas
+</a>
+
+@if (erro()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+}
+@if (conta.isLoading() && !conta.value()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (conta.value(); as c) {
+  <div class="cabecalho">
+    <section class="cartao titular">
+      <span [class]="c.titularId | corAvatar">{{ c.titularNome | iniciais }}</span>
+      <div class="dados">
+        <h2>
+          {{ c.titularNome }}
+          <app-status-conta [status]="c.status" />
+          @if (cliente.value()?.primeiroAcesso) {
+            <span class="chip primeiro" matTooltip="Ainda não trocou a senha provisória">1º acesso</span>
+          }
+        </h2>
+        <div class="linha">
+          <span>Agência <b class="num">{{ c.agencia }}</b></span>
+          <span>Conta <b class="num">{{ c.numero }}</b></span>
+          @if (cliente.value()?.cpf; as cpf) {
+            <span>CPF <b class="num">{{ cpf }}</b></span>
+          }
+        </div>
+        <div class="linha">
+          @if (cliente.value(); as cli) {
+            <span><mat-icon>mail</mat-icon>{{ cli.email }}</span>
+          }
+          <span><mat-icon>calendar_today</mat-icon>conta aberta em {{ c.abertaEm | date: 'dd/MM/yyyy' }}</span>
+        </div>
+      </div>
+      <button matIconButton [matMenuTriggerFor]="menuCliente" aria-label="Ações do cliente" [disabled]="!cliente.value()">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #menuCliente="matMenu" xPosition="before">
+        <button mat-menu-item (click)="editarCliente()">
+          <mat-icon>edit</mat-icon>
+          Editar dados do cliente
+        </button>
+        <button mat-menu-item (click)="novaSenha()">
+          <mat-icon>key</mat-icon>
+          Nova senha provisória
+        </button>
+      </mat-menu>
+    </section>
+
+    <section class="cartao saldo">
+      <div class="rot">Saldo disponível</div>
+      <div class="valor num">{{ c.saldo | currency: 'BRL' }}</div>
+      <div class="acoes">
+        <button matButton="filled" (click)="depositar(c)" [disabled]="c.status !== 'ATIVA'">
+          <mat-icon>add</mat-icon>
+          Depositar
+        </button>
+        @if (c.status !== 'ENCERRADA') {
+          <button matButton="outlined" (click)="alternarBloqueio(c)">
+            <mat-icon>{{ c.status === 'ATIVA' ? 'lock' : 'lock_open' }}</mat-icon>
+            {{ c.status === 'ATIVA' ? 'Bloquear' : 'Desbloquear' }}
+          </button>
+          <span [matTooltip]="c.saldo !== 0 ? 'Só dá para encerrar com saldo zero' : ''">
+            <button matButton="outlined" class="perigo" (click)="encerrar(c)" [disabled]="c.saldo !== 0">
+              <mat-icon>block</mat-icon>
+              Encerrar
+            </button>
+          </span>
+        }
+      </div>
+      @if (c.status === 'BLOQUEADA') {
+        <p class="obs"><mat-icon>info</mat-icon>Conta bloqueada: não envia nem recebe dinheiro.</p>
+      } @else if (c.status === 'ENCERRADA') {
+        <p class="obs"><mat-icon>info</mat-icon>Conta encerrada: só o histórico fica disponível.</p>
+      }
+    </section>
+  </div>
+
+  <section class="cartao">
+    <mat-tab-group mat-stretch-tabs="false" animationDuration="150ms">
+      <mat-tab label="Extrato">
+        <div class="filtros">
+          <mat-button-toggle-group
+            [value]="atalho()"
+            (change)="escolherAtalho($event.value)"
+            hideSingleSelectionIndicator
+            aria-label="Período do extrato"
+          >
+            <mat-button-toggle [value]="7">7 dias</mat-button-toggle>
+            <mat-button-toggle [value]="30">30 dias</mat-button-toggle>
+            <mat-button-toggle [value]="90">90 dias</mat-button-toggle>
+            <mat-button-toggle value="outro"><mat-icon>date_range</mat-icon> Período</mat-button-toggle>
+          </mat-button-toggle-group>
+
+          @if (atalho() === 'outro') {
+            <mat-form-field class="datas" subscriptSizing="dynamic">
+              <mat-label>De – até</mat-label>
+              <mat-date-range-input [formGroup]="intervalo" [rangePicker]="seletor" [min]="umAnoAtras" [max]="hoje">
+                <input matStartDate formControlName="inicio" placeholder="Início" />
+                <input matEndDate formControlName="fim" placeholder="Fim" />
+              </mat-date-range-input>
+              <mat-datepicker-toggle matIconSuffix [for]="seletor" />
+              <mat-date-range-picker #seletor />
+            </mat-form-field>
+          }
+
+          <span class="espaco"></span>
+          @if (extrato.value()) {
+            <span class="resumo">
+              Entradas <b class="num entrada">{{ entradas() | currency: 'BRL' }}</b>
+              · Saídas <b class="num saida">{{ saidas() | currency: 'BRL' }}</b>
+            </span>
+          }
+        </div>
+
+        @if (extrato.isLoading()) {
+          <mat-progress-bar mode="indeterminate" />
+        }
+        @if (extrato.error()) {
+          <div class="erro-geral"><mat-icon>error</mat-icon>{{ mensagemDeErro(extrato.error()) }}</div>
+        }
+        @if (!periodo()) {
+          <div class="vazio"><mat-icon>date_range</mat-icon>Escolha as datas de início e fim.</div>
+        } @else if (extrato.value(); as linhas) {
+          @if (linhas.length === 0) {
+            <div class="vazio"><mat-icon>receipt_long</mat-icon>Nenhuma movimentação neste período.</div>
+          } @else {
+            <div class="rolagem">
+              <table mat-table [dataSource]="linhas">
+                <ng-container matColumnDef="data">
+                  <th mat-header-cell *matHeaderCellDef>Data</th>
+                  <td mat-cell *matCellDef="let t" class="num muted">{{ t.dataHora | date: 'dd/MM HH:mm' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="descricao">
+                  <th mat-header-cell *matHeaderCellDef>Descrição</th>
+                  <td mat-cell *matCellDef="let t">
+                    <div class="duas-linhas">
+                      <span class="ico-tx" [class.entrada]="t.tipo === 'ENTRADA'">
+                        <mat-icon>{{ t.categoria | iconeCategoria }}</mat-icon>
+                      </span>
+                      <div>
+                        {{ t | tituloTransacao }}
+                        <small>{{ t | detalheTransacao }}</small>
+                      </div>
+                    </div>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="categoria">
+                  <th mat-header-cell *matHeaderCellDef>Categoria</th>
+                  <td mat-cell *matCellDef="let t"><span class="chip">{{ t.categoria }}</span></td>
+                </ng-container>
+                <ng-container matColumnDef="valor">
+                  <th mat-header-cell *matHeaderCellDef class="dir">Valor</th>
+                  <td mat-cell *matCellDef="let t" class="dir num" [class.entrada]="t.tipo === 'ENTRADA'" [class.saida]="t.tipo === 'SAIDA'">
+                    {{ t | sinal }} {{ t.valor | currency: 'BRL' }}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="saldo">
+                  <th mat-header-cell *matHeaderCellDef class="dir">Saldo</th>
+                  <td mat-cell *matCellDef="let t" class="dir num muted">{{ t.saldoApos | currency: 'BRL' }}</td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+                <tr
+                  mat-row
+                  *matRowDef="let t; columns: colunas"
+                  class="clicavel"
+                  (click)="abrirComprovante(t)"
+                  matTooltip="Ver comprovante"
+                  matTooltipPosition="above"
+                  [matTooltipShowDelay]="600"
+                ></tr>
+              </table>
+            </div>
+          }
+        }
+      </mat-tab>
+
+      <mat-tab>
+        <ng-template mat-tab-label>
+          Chaves Pix
+          <span class="cont">{{ chaves.value()?.length ?? 0 }}</span>
+        </ng-template>
+        @if (chaves.value(); as lista) {
+          @if (lista.length === 0) {
+            <div class="vazio">
+              <mat-icon>pix</mat-icon>
+              Nenhuma chave Pix. O próprio cliente cadastra as chaves pelo app.
+            </div>
+          } @else {
+            <ul class="chaves">
+              @for (k of lista; track k.id) {
+                <li>
+                  <span class="ico-tx entrada"><mat-icon>{{ iconeChave[k.tipo] }}</mat-icon></span>
+                  <div class="duas-linhas">
+                    <div>
+                      <span class="num">{{ k.valor }}</span>
+                      <small>{{ nomeChave[k.tipo] }} · cadastrada em {{ k.criadaEm | date: 'dd/MM/yyyy' }}</small>
+                    </div>
+                  </div>
+                </li>
+              }
+            </ul>
+            <p class="nota">O cliente pode ter até 5 chaves. Só ele cadastra e exclui, pelo app.</p>
+          }
+        }
+      </mat-tab>
+    </mat-tab-group>
+  </section>
+}

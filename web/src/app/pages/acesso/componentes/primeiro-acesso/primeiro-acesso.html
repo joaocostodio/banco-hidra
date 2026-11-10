@@ -1,0 +1,11 @@
+<app-vitrine>
+  <h1 titulo>Boas-vindas,<br /><span>{{ auth.primeiroNome() }}</span>.</h1>
+  <p subtitulo>Sua conta no Banco Hidra já está aberta. Antes de começar, crie uma senha só sua.</p>
+
+  <h2>Crie sua senha</h2>
+  <p class="sub">A senha provisória serve só para este primeiro acesso.</p>
+
+  <app-form-senha rotuloAtual="Senha provisória" textoBotao="Salvar e entrar" (salvo)="concluir()" />
+
+  <button matButton class="sair" type="button" (click)="auth.sair()">Sair</button>
+</app-vitrine>

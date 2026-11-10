@@ -1,0 +1,93 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  padding-bottom: var(--altura-rodape);
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 64px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--borda);
+}
+
+.conteudo {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.ola {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+h1 {
+  margin: 0 0 20px;
+  font-size: 24px;
+  font-weight: 650;
+}
+
+.saldo {
+  position: relative;
+  overflow: hidden;
+  padding: 22px;
+  border-radius: 20px;
+  background: linear-gradient(140deg, #17543b, #0f241a 60%, #14171c);
+  border: 1px solid var(--verde-borda);
+}
+
+.saldo::after {
+  content: '';
+  position: absolute;
+  right: -30px;
+  bottom: -40px;
+  width: 170px;
+  height: 170px;
+  background: url('/hidra.svg') center / contain no-repeat;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.rot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.valor {
+  margin: 4px 0;
+  font-size: 32px;
+  font-weight: 650;
+}
+
+.conta {
+  color: var(--prata);
+  font-size: 12.5px;
+}
+
+.em-breve {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: var(--raio-grande);
+  background: var(--superficie);
+  border: 1px dashed var(--borda-forte);
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.em-breve b {
+  display: block;
+  color: var(--texto);
+}
+
+.em-breve .mat-icon {
+  flex: none;
+  color: var(--prata);
+}

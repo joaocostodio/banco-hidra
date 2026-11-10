@@ -50,7 +50,7 @@ que validam valor e saldo disponível.
 
 - [x] 1. API base: Postgres, entidades, controllers de categoria, conta e transação, transferência com validação
 - [x] 2. Login e perfis (JWT)
-- [ ] 3. Painel ADM
+- [x] 3. Painel ADM (Angular + Material com o tema da Hidra; esboço das telas em `docs/esboco/index.html`)
 - [ ] 4. App do cliente: saldo, extrato, Pix
 - [ ] 5. Extras: QR code, boleto, comprovante, testes
 
@@ -73,7 +73,8 @@ Toda rota, exceto o login, exige o cabeçalho `Authorization: Bearer <token>`.
 
 | Método | Rota | O que faz |
 |---|---|---|
-| GET/POST | `/categorias` | Lista / cria categoria |
+| GET | `/painel` | Total custodiado, clientes, contas por situação, operações de hoje e dos últimos 7 dias |
+| GET/POST | `/categorias` | Lista (com quantas transações usam cada uma) / cria categoria |
 | GET/PUT/DELETE | `/categorias/{id}` | Busca / edita / exclui (as de sistema e as em uso são protegidas) |
 | GET | `/clientes` | Lista clientes com a conta de cada um |
 | POST | `/clientes` | Cadastra cliente (`nome`, `cpf`, `email`), **abre a conta** e devolve a **senha provisória** |
@@ -136,6 +137,20 @@ Requisitos: Docker e JDK 21.
 ```bash
 docker compose up -d          # PostgreSQL em localhost:5433
 cd api && ./mvnw quarkus:dev  # API em http://localhost:8080
-cd api && ./mvnw test         # 24 testes (os de API sobem um Postgres descartável)
-cd web && npm install && npm start   # site em http://localhost:4300 (etapa 3)
+cd api && ./mvnw test         # 28 testes (os de API sobem um Postgres descartável)
+cd web && npm install && npm start   # site em http://localhost:4300
 ```
+
+## Site (web/)
+
+Angular 22 + Angular Material, seguindo as instruções da disciplina: só CSS, signals, reactive forms,
+HTML/CSS separados do TypeScript e a estrutura `pages/<funcionalidade>/{model,services,routes,componentes}`.
+
+- **Tema:** o tema pronto do Material (`azure-blue.css`) com as cores trocadas pelas da Hidra em `src/styles.css`
+  (variáveis `--mat-sys-*`), sem Sass.
+- **Login único** em `/entrar`: o perfil do token decide a área (`/admin` ou `/app`). Quem entra com senha
+  provisória vai para `/primeiro-acesso` e não sai de lá sem criar a própria senha.
+- **Painel ADM:** painel inicial, clientes (busca, filtros, cadastro, edição, nova senha provisória), contas
+  (extrato por período, chaves Pix, depósito, bloqueio, encerramento), movimentações com comprovante e categorias.
+- `common/` tem o que é reaproveitado: sessão e interceptor do token, guardas de rota, validações (CPF, senha, valor),
+  marca, rodapé e diálogos.

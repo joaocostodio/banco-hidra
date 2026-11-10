@@ -1,0 +1,45 @@
+<header class="topo">
+  <app-marca />
+  <span class="espaco"></span>
+  <button matButton (click)="trocarSenha()"><mat-icon>key</mat-icon>Trocar senha</button>
+  <button matButton (click)="auth.sair()"><mat-icon>logout</mat-icon>Sair</button>
+</header>
+
+<main class="conteudo">
+  <p class="ola">Olá,</p>
+  <h1>{{ auth.usuario()?.nome }}</h1>
+
+  @if (conta.isLoading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+  @if (conta.error()) {
+    <div class="erro-geral"><mat-icon>error</mat-icon>{{ mensagemDeErro(conta.error()) }}</div>
+  }
+
+  @if (conta.value(); as c) {
+    <section class="saldo">
+      <div class="rot">
+        Saldo disponível
+        <button
+          matIconButton
+          (click)="ocultar.set(!ocultar())"
+          [attr.aria-label]="ocultar() ? 'Mostrar saldo' : 'Esconder saldo'"
+        >
+          <mat-icon>{{ ocultar() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+      </div>
+      <div class="valor num">{{ ocultar() ? 'R$ ••••••' : (c.saldo | currency: 'BRL') }}</div>
+      <div class="conta num">Ag {{ c.agencia }} · CC {{ c.numero }}</div>
+    </section>
+  }
+
+  <div class="em-breve">
+    <mat-icon>construction</mat-icon>
+    <div>
+      <b>O app do cliente está sendo construído.</b>
+      Extrato, Pix, transferências e comprovantes chegam na próxima etapa.
+    </div>
+  </div>
+</main>
+
+<app-rodape />

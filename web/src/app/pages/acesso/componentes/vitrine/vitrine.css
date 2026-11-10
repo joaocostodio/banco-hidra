@@ -1,0 +1,80 @@
+:host {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  min-height: 100vh;
+  padding-bottom: var(--altura-rodape);
+}
+
+.arte {
+  position: relative;
+  overflow: hidden;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+  background:
+    radial-gradient(640px 420px at 30% 35%, rgb(61 220 151 / 16%), transparent 70%),
+    #0e1110;
+  border-right: 1px solid var(--borda);
+}
+
+.hidra {
+  width: min(240px, 40vw);
+  align-self: center;
+  filter: drop-shadow(0 20px 60px rgb(61 220 151 / 25%));
+}
+
+.frase ::ng-deep h1 {
+  margin: 0 0 8px;
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 650;
+}
+
+.frase ::ng-deep h1 span {
+  color: var(--verde);
+}
+
+.frase ::ng-deep p {
+  margin: 0;
+  max-width: 440px;
+  color: var(--texto-suave);
+}
+
+.linha-prata {
+  height: 2px;
+  width: 72px;
+  margin: 18px 0;
+  border-radius: 2px;
+  background: var(--prata-gradiente);
+}
+
+.formulario {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.caixa {
+  width: 100%;
+  max-width: 390px;
+}
+
+@media (max-width: 860px) {
+  :host {
+    grid-template-columns: 1fr;
+  }
+
+  .arte {
+    padding: 24px;
+    border-right: 0;
+    border-bottom: 1px solid var(--borda);
+  }
+
+  .hidra,
+  .frase {
+    display: none;
+  }
+}

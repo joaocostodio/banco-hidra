@@ -1,0 +1,23 @@
+.titulo-pagina p {
+  max-width: 640px;
+}
+
+.filtros {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--borda);
+}
+
+.rolagem {
+  overflow-x: auto;
+}
+
+.link {
+  color: var(--texto);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--borda-forte);
+}
+
+.link:hover {
+  color: var(--verde);
+  border-color: var(--verde);
+}

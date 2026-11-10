@@ -1,0 +1,67 @@
+h2 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 650;
+}
+
+.sub {
+  margin: 0 0 24px;
+  color: var(--texto-suave);
+}
+
+.largo {
+  width: 100%;
+  height: 46px;
+  margin-top: 4px;
+}
+
+mat-progress-bar {
+  margin-top: 10px;
+  border-radius: 2px;
+}
+
+.mat-icon[matPrefix] {
+  margin: 0 4px 0 12px;
+  color: var(--texto-suave);
+}
+
+.aviso {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  border-radius: var(--raio);
+  background: var(--aviso-suave);
+  border: 1px solid var(--aviso-borda);
+  color: #f3cf97;
+  font-size: 13px;
+}
+
+.aviso .mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: var(--aviso);
+}
+
+.dica {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 26px;
+  padding: 12px 14px;
+  border-radius: var(--raio);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  font-size: 12.5px;
+  color: var(--texto-suave);
+}
+
+.dica .mat-icon {
+  flex: none;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: var(--prata);
+}

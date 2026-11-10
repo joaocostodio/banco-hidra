@@ -1,0 +1,53 @@
+@if (erro()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+}
+
+<form [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+  <mat-form-field>
+    <mat-label>{{ rotuloAtual() }}</mat-label>
+    <mat-icon matPrefix>key</mat-icon>
+    <input matInput [type]="mostrar() ? 'text' : 'password'" formControlName="senhaAtual" autocomplete="current-password" />
+    <mat-error>Informe a {{ rotuloAtual().toLowerCase() }}</mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Nova senha</mat-label>
+    <mat-icon matPrefix>lock</mat-icon>
+    <input matInput [type]="mostrar() ? 'text' : 'password'" formControlName="novaSenha" autocomplete="new-password" />
+    <button
+      matIconButton
+      matSuffix
+      type="button"
+      (click)="mostrar.set(!mostrar())"
+      [attr.aria-label]="mostrar() ? 'Esconder senhas' : 'Mostrar senhas'"
+    >
+      <mat-icon>{{ mostrar() ? 'visibility_off' : 'visibility' }}</mat-icon>
+    </button>
+    @if (form.controls.novaSenha.hasError('senhaFraca')) {
+      <mat-error>A senha ainda não segue as regras abaixo</mat-error>
+    } @else {
+      <mat-error>Informe a nova senha</mat-error>
+    }
+  </mat-form-field>
+
+  <app-regras-senha [senha]="novaSenha()" [anterior]="senhaAtual()" />
+
+  <mat-form-field>
+    <mat-label>Confirme a nova senha</mat-label>
+    <mat-icon matPrefix>lock</mat-icon>
+    <input
+      matInput
+      [type]="mostrar() ? 'text' : 'password'"
+      formControlName="confirmacao"
+      autocomplete="new-password"
+      [errorStateMatcher]="confirmacaoMatcher"
+    />
+    @if (form.hasError('naoConferem')) {
+      <mat-error>As senhas não conferem</mat-error>
+    } @else {
+      <mat-error>Repita a nova senha</mat-error>
+    }
+  </mat-form-field>
+
+  <button matButton="filled" class="largo" type="submit" [disabled]="enviando()">{{ textoBotao() }}</button>
+</form>

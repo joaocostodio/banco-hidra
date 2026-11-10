@@ -1,0 +1,74 @@
+.grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.categoria {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 76px;
+  padding: 14px 12px 14px 18px;
+}
+
+.bolha {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--superficie-2);
+  color: var(--prata);
+}
+
+.sistema .bolha {
+  background: var(--verde-suave);
+  color: var(--verde);
+}
+
+.texto {
+  flex: 1;
+  min-width: 0;
+}
+
+h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+small {
+  color: var(--texto-suave);
+  font-size: 12.5px;
+}
+
+.cadeado {
+  margin-right: 8px;
+  color: var(--prata-escura);
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.acoes {
+  display: flex;
+}
+
+.nova {
+  justify-content: center;
+  border-style: dashed;
+  color: var(--texto-suave);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.nova:hover {
+  border-color: var(--verde);
+  color: var(--verde);
+}

@@ -1,0 +1,21 @@
+<h2 mat-dialog-title>{{ categoria ? 'Renomear categoria' : 'Nova categoria' }}</h2>
+<form [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+  <mat-dialog-content class="dialogo-largo">
+    @if (erro()) {
+      <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+    }
+    <mat-form-field>
+      <mat-label>Descrição</mat-label>
+      <input matInput formControlName="descricao" placeholder="Ex.: Mercado, Aluguel" autocomplete="off" cdkFocusInitial />
+      @if (form.controls.descricao.hasError('api')) {
+        <mat-error>{{ form.controls.descricao.getError('api') }}</mat-error>
+      } @else {
+        <mat-error>Informe a descrição</mat-error>
+      }
+    </mat-form-field>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button matButton type="button" mat-dialog-close>Cancelar</button>
+    <button matButton="filled" type="submit" [disabled]="enviando()">Salvar</button>
+  </mat-dialog-actions>
+</form>

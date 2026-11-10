@@ -1,0 +1,37 @@
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--borda);
+}
+
+.busca {
+  flex: 1;
+  min-width: 240px;
+  max-width: 380px;
+  --mat-form-field-container-height: 40px;
+  --mat-form-field-container-vertical-padding: 8px;
+}
+
+.busca .mat-icon[matPrefix] {
+  margin: 0 2px 0 12px;
+  color: var(--texto-suave);
+}
+
+.cont {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--texto-suave);
+}
+
+.rolagem {
+  overflow-x: auto;
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}

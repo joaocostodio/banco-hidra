@@ -1,0 +1,91 @@
+<mat-sidenav-container>
+  <mat-sidenav
+    [mode]="celular() ? 'over' : 'side'"
+    [opened]="menuVisivel()"
+    (closedStart)="menuAberto.set(false)"
+    [fixedInViewport]="true"
+    [fixedBottomGap]="28"
+  >
+    <div class="lateral">
+      <app-marca class="marca" />
+      <span class="selo"><span class="ponto"></span>Administração</span>
+
+      <mat-nav-list>
+        @for (item of itens; track item.rota) {
+          <a
+            mat-list-item
+            [routerLink]="item.rota"
+            routerLinkActive
+            #rla="routerLinkActive"
+            [routerLinkActiveOptions]="{ exact: !!item.exato }"
+            [activated]="rla.isActive"
+            (click)="fecharMenuNoCelular()"
+          >
+            <mat-icon matListItemIcon [class.icone-cheio]="rla.isActive">{{ item.icone }}</mat-icon>
+            <span matListItemTitle>{{ item.nome }}</span>
+          </a>
+        }
+      </mat-nav-list>
+
+      <span class="espaco"></span>
+      <div class="ajuda">
+        <mat-icon>lightbulb</mat-icon>
+        <span>O administrador cadastra clientes e deposita. Transferências e Pix são feitos pelo próprio cliente.</span>
+      </div>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <header class="topo">
+      @if (celular()) {
+        <button matIconButton (click)="menuAberto.set(true)" aria-label="Abrir menu">
+          <mat-icon>menu</mat-icon>
+        </button>
+      }
+      <span class="trilha">
+        <span class="muted">Administração ›</span>
+        <b>{{ titulo.atual() }}</b>
+      </span>
+      <span class="espaco"></span>
+
+      <form class="busca" (ngSubmit)="buscar()">
+        <mat-form-field subscriptSizing="dynamic">
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            #campoBusca
+            matInput
+            [formControl]="busca"
+            placeholder="Buscar cliente"
+            aria-label="Buscar cliente ou conta"
+          />
+          <kbd matSuffix>Ctrl K</kbd>
+        </mat-form-field>
+      </form>
+
+      <button class="usuario" matButton [matMenuTriggerFor]="menuUsuario">
+        <span class="avatar prata">{{ auth.usuario()?.nome | iniciais }}</span>
+        <span class="quem">
+          {{ auth.usuario()?.nome }}
+          <small>{{ auth.usuario()?.email }}</small>
+        </span>
+        <mat-icon>expand_more</mat-icon>
+      </button>
+      <mat-menu #menuUsuario="matMenu" xPosition="before">
+        <button mat-menu-item (click)="trocarSenha()">
+          <mat-icon>key</mat-icon>
+          Trocar minha senha
+        </button>
+        <button mat-menu-item (click)="auth.sair()">
+          <mat-icon>logout</mat-icon>
+          Sair
+        </button>
+      </mat-menu>
+    </header>
+
+    <main class="conteudo">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
+<app-rodape />

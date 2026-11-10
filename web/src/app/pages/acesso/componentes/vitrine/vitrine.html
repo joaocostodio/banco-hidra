@@ -1,0 +1,15 @@
+<section class="arte">
+  <app-marca />
+  <img class="hidra" src="hidra.svg" alt="" />
+  <div class="frase">
+    <ng-content select="[titulo]" />
+    <div class="linha-prata"></div>
+    <ng-content select="[subtitulo]" />
+  </div>
+</section>
+<main class="formulario">
+  <div class="caixa">
+    <ng-content />
+  </div>
+</main>
+<app-rodape />
