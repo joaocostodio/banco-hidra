@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: banco-hidra-db
+    environment:
+      POSTGRES_DB: bancohidra
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - banco-hidra-dados:/var/lib/postgresql/data
+
+volumes:
+  banco-hidra-dados:
