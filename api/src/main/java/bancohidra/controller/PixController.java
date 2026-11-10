@@ -9,10 +9,12 @@ import bancohidra.entity.Categoria;
 import bancohidra.entity.ChavePix;
 import bancohidra.entity.Conta;
 import bancohidra.entity.Transacao;
-import bancohidra.exception.NaoEncontradoException;
+import bancohidra.security.Papeis;
+import bancohidra.security.UsuarioLogado;
 import bancohidra.service.ChavePixService;
 import bancohidra.service.MovimentacaoService;
 import bancohidra.util.Cpf;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -28,10 +30,15 @@ import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 
-@Path("/pix")
+/** Pix do cliente logado: suas chaves e envio por chave. */
+@Path("/minha-conta/pix")
+@RolesAllowed(Papeis.CLIENTE)
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class PixController {
+
+    @Inject
+    UsuarioLogado logado;
 
     @Inject
     ChavePixService chavePixService;
@@ -39,35 +46,27 @@ public class PixController {
     @Inject
     MovimentacaoService movimentacaoService;
 
-    // ---------- chaves de uma conta ----------
-
     @GET
-    @Path("/contas/{contaId}/chaves")
-    public List<ChaveResponse> chaves(@PathParam("contaId") Long contaId) {
-        Conta conta = Conta.findById(contaId);
-        if (conta == null) {
-            throw new NaoEncontradoException("Conta não encontrada");
-        }
-        return ChavePix.daConta(conta).stream().map(ChaveResponse::de).toList();
+    @Path("/chaves")
+    public List<ChaveResponse> chaves() {
+        return ChavePix.daConta(logado.conta()).stream().map(ChaveResponse::de).toList();
     }
 
     @POST
-    @Path("/contas/{contaId}/chaves")
-    public Response cadastrarChave(@PathParam("contaId") Long contaId, @Valid NovaChaveRequest req) {
-        ChavePix chave = chavePixService.cadastrar(contaId, req.tipo(), req.valor());
+    @Path("/chaves")
+    public Response cadastrarChave(@Valid NovaChaveRequest req) {
+        ChavePix chave = chavePixService.cadastrar(logado.conta().id, req.tipo(), req.valor());
         return Response.status(Response.Status.CREATED).entity(ChaveResponse.de(chave)).build();
     }
 
     @DELETE
-    @Path("/contas/{contaId}/chaves/{chaveId}")
-    public Response excluirChave(@PathParam("contaId") Long contaId, @PathParam("chaveId") Long chaveId) {
-        chavePixService.excluir(contaId, chaveId);
+    @Path("/chaves/{chaveId}")
+    public Response excluirChave(@PathParam("chaveId") Long chaveId) {
+        chavePixService.excluir(logado.conta().id, chaveId);
         return Response.noContent().build();
     }
 
-    // ---------- pagar ----------
-
-    /** Consulta quem é o dono da chave antes de confirmar o Pix ("você está pagando..."). */
+    /** Quem é o dono da chave, antes de confirmar ("você está pagando..."). */
     @GET
     @Path("/destinatario")
     public DestinatarioResponse destinatario(@QueryParam("chave") String chave) {
@@ -78,10 +77,9 @@ public class PixController {
     }
 
     @POST
-    @Path("/transferencias")
     public Response enviar(@Valid PixRequest req) {
         ChavePix destino = chavePixService.resolver(req.chave());
-        Transacao saida = movimentacaoService.transferir(req.contaOrigemId(), destino.conta.id,
+        Transacao saida = movimentacaoService.transferir(logado.conta().id, destino.conta.id,
                 req.valor(), req.descricao(), Categoria.PIX);
         return Response.status(Response.Status.CREATED).entity(TransacaoResponse.de(saida)).build();
     }

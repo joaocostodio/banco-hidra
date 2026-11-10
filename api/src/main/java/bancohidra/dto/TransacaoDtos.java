@@ -2,6 +2,7 @@ package bancohidra.dto;
 
 import bancohidra.entity.TipoTransacao;
 import bancohidra.entity.Transacao;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -28,9 +29,10 @@ public final class TransacaoDtos {
         }
     }
 
+    /** Transferência feita pelo cliente: a origem é a conta dele; o destino, agência + número. */
     public record TransferenciaRequest(
-            @NotNull(message = "Informe a conta de origem") Long contaOrigemId,
-            @NotNull(message = "Informe a conta de destino") Long contaDestinoId,
+            @NotBlank(message = "Informe a agência") String agencia,
+            @NotBlank(message = "Informe o número da conta") String numero,
             @NotNull(message = "Informe o valor") BigDecimal valor,
             @Size(max = 200) String descricao) {
     }

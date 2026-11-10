@@ -28,10 +28,17 @@ public final class ClienteDtos {
             @NotBlank(message = "Informe o e-mail") @Email(message = "E-mail inválido") @Size(max = 150) String email) {
     }
 
+    /** Resposta do cadastro: a senha provisória aparece só esta vez, para o ADM entregar ao cliente. */
+    public record NovoClienteResponse(ClienteResponse cliente, String senhaProvisoria) {
+    }
+
+    public record SenhaProvisoriaResponse(String senhaProvisoria) {
+    }
+
     public record ClienteResponse(Long id, String nome, String cpf, String email, Perfil perfil,
                                   LocalDateTime criadoEm, ContaDtos.ContaResumo conta) {
         public static ClienteResponse de(Usuario u, Conta conta) {
-            return new ClienteResponse(u.id, u.nome, Cpf.formatar(u.cpf), u.email, u.perfil, u.criadoEm,
+            return new ClienteResponse(u.id, u.nome, u.cpf == null ? null : Cpf.formatar(u.cpf), u.email, u.perfil, u.criadoEm,
                     conta == null ? null : ContaDtos.ContaResumo.de(conta));
         }
     }

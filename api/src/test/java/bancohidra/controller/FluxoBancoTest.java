@@ -1,63 +1,54 @@
 package bancohidra.controller;
 
+import bancohidra.controller.Api.Cliente;
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static io.restassured.RestAssured.given;
+import static bancohidra.controller.Api.como;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 /**
  * Fluxo completo pela API, com um PostgreSQL de verdade (o Quarkus sobe um descartável
- * pelo Docker): cadastrar clientes, depositar, Pix por chave, extrato e comprovante.
+ * pelo Docker): admin cadastra clientes e deposita; clientes fazem Pix e transferência.
  */
 @QuarkusTest
 class FluxoBancoTest {
 
-    private long cadastrar(String nome, String cpf, String email) {
-        return given().contentType(ContentType.JSON)
-                .body(Map.of("nome", nome, "cpf", cpf, "email", email))
-                .when().post("/clientes")
-                .then().statusCode(201)
-                .body("conta.agencia", equalTo("0001"))
-                .extract().jsonPath().getLong("conta.id");
-    }
-
     @Test
-    void depositoPixExtratoEComprovante() {
-        long ana = cadastrar("Ana Souza", "529.982.247-25", "ana@hidra.com");
-        long beto = cadastrar("Beto Lima", "111.444.777-35", "beto@hidra.com");
+    void depositoPixTransferenciaExtratoEComprovante() {
+        String admin = Api.admin();
+        Cliente ana = Api.novoCliente("Ana Souza");
+        Cliente beto = Api.novoCliente("Beto Lima");
 
         // CPF repetido é recusado
-        given().contentType(ContentType.JSON)
-                .body(Map.of("nome", "Outra", "cpf", "52998224725", "email", "x@hidra.com"))
+        como(admin).body(Map.of("nome", "Outra", "cpf", ana.cpf(), "email", "outra@hidra.com"))
                 .when().post("/clientes").then().statusCode(422);
 
         // Administrador deposita 100 na conta da Ana
-        given().contentType(ContentType.JSON).body(Map.of("valor", 100))
-                .when().post("/contas/" + ana + "/depositos")
+        como(admin).body(Map.of("valor", 100))
+                .when().post("/contas/" + ana.contaId() + "/depositos")
                 .then().statusCode(201).body("saldoApos", equalTo(100.0f));
 
         // Beto cadastra a chave e-mail
-        given().contentType(ContentType.JSON).body(Map.of("tipo", "EMAIL", "valor", "Beto@Hidra.com"))
-                .when().post("/pix/contas/" + beto + "/chaves")
+        como(beto.token()).body(Map.of("tipo", "EMAIL", "valor", "Beto@Hidra.com"))
+                .when().post("/minha-conta/pix/chaves")
                 .then().statusCode(201).body("valor", equalTo("beto@hidra.com"));
 
         // Ana consulta a chave antes de pagar
-        given().queryParam("chave", "beto@hidra.com")
-                .when().get("/pix/destinatario")
+        como(ana.token()).queryParam("chave", "beto@hidra.com")
+                .when().get("/minha-conta/pix/destinatario")
                 .then().statusCode(200)
                 .body("nome", equalTo("Beto Lima"))
-                .body("cpfMascarado", equalTo("***.444.777-**"));
+                .body("tipoChave", equalTo("EMAIL"));
 
         // Pix de 40 da Ana para o Beto
-        String autenticacao = given().contentType(ContentType.JSON)
-                .body(Map.of("contaOrigemId", ana, "chave", "beto@hidra.com", "valor", 40, "descricao", "Almoço"))
-                .when().post("/pix/transferencias")
+        String autenticacao = como(ana.token())
+                .body(Map.of("chave", "beto@hidra.com", "valor", 40, "descricao", "Almoço"))
+                .when().post("/minha-conta/pix")
                 .then().statusCode(201)
                 .body("tipo", equalTo("SAIDA"))
                 .body("categoria", equalTo("Pix"))
@@ -65,50 +56,66 @@ class FluxoBancoTest {
                 .extract().path("autenticacao");
 
         // Pix maior que o saldo é recusado e não altera nada
-        given().contentType(ContentType.JSON)
-                .body(Map.of("contaOrigemId", ana, "chave", "beto@hidra.com", "valor", 1000))
-                .when().post("/pix/transferencias")
+        como(ana.token()).body(Map.of("chave", "beto@hidra.com", "valor", 1000))
+                .when().post("/minha-conta/pix")
                 .then().statusCode(422).body("erro", equalTo("Saldo insuficiente"));
 
-        given().when().get("/contas/" + ana).then().body("saldo", equalTo(60.0f));
-        given().when().get("/contas/" + beto).then().body("saldo", equalTo(40.0f));
+        // Beto devolve 15 por agência + número
+        como(beto.token()).queryParam("agencia", ana.agencia()).queryParam("numero", ana.numero())
+                .when().get("/minha-conta/destinatario")
+                .then().statusCode(200).body("nome", equalTo("Ana Souza"));
+        como(beto.token())
+                .body(Map.of("agencia", ana.agencia(), "numero", ana.numero(), "valor", 15))
+                .when().post("/minha-conta/transferencias")
+                .then().statusCode(201).body("categoria", equalTo("Transferência"));
 
-        // Extrato da Ana: Pix (mais recente) e depósito
-        given().when().get("/contas/" + ana + "/extrato")
+        // Para a própria conta não pode
+        como(ana.token())
+                .body(Map.of("agencia", ana.agencia(), "numero", ana.numero(), "valor", 1))
+                .when().post("/minha-conta/transferencias")
+                .then().statusCode(422);
+
+        como(ana.token()).when().get("/minha-conta").then().body("saldo", equalTo(75.0f));
+        como(beto.token()).when().get("/minha-conta").then().body("saldo", equalTo(25.0f));
+
+        // Extrato da Ana: transferência recebida, Pix enviado, depósito (do mais recente ao mais antigo)
+        como(ana.token()).when().get("/minha-conta/extrato")
                 .then().statusCode(200)
-                .body("$", hasSize(2))
-                .body("[0].descricao", equalTo("Almoço"))
-                .body("[1].categoria", equalTo("Depósito"));
+                .body("$", hasSize(3))
+                .body("[0].tipo", equalTo("ENTRADA"))
+                .body("[1].descricao", equalTo("Almoço"))
+                .body("[2].categoria", equalTo("Depósito"));
 
         // Comprovante liga as duas pontas
-        given().when().get("/transacoes/comprovantes/" + autenticacao)
+        como(ana.token()).when().get("/minha-conta/comprovantes/" + autenticacao)
                 .then().statusCode(200)
                 .body("origem.nome", equalTo("Ana Souza"))
                 .body("destino.nome", equalTo("Beto Lima"))
                 .body("valor", equalTo(40.0f));
 
-        // Conta bloqueada não recebe
-        given().when().post("/contas/" + beto + "/bloqueio").then().statusCode(200).body("status", equalTo("BLOQUEADA"));
-        given().contentType(ContentType.JSON)
-                .body(Map.of("contaOrigemId", ana, "contaDestinoId", beto, "valor", 1))
-                .when().post("/transacoes/transferencias")
-                .then().statusCode(422);
-        given().when().delete("/contas/" + beto + "/bloqueio").then().statusCode(200).body("status", equalTo("ATIVA"));
+        // Conta bloqueada não recebe; desbloqueada volta a receber
+        como(admin).when().post("/contas/" + beto.contaId() + "/bloqueio")
+                .then().statusCode(200).body("status", equalTo("BLOQUEADA"));
+        como(ana.token()).body(Map.of("chave", "beto@hidra.com", "valor", 1))
+                .when().post("/minha-conta/pix").then().statusCode(422);
+        como(admin).when().delete("/contas/" + beto.contaId() + "/bloqueio")
+                .then().statusCode(200).body("status", equalTo("ATIVA"));
     }
 
     @Test
     void categoriasDoSistemaSaoProtegidas() {
-        int pix = given().when().get("/categorias").then().statusCode(200)
+        String admin = Api.admin();
+        int pix = como(admin).when().get("/categorias").then().statusCode(200)
                 .extract().jsonPath().getInt("find { it.descricao == 'Pix' }.id");
 
-        given().when().delete("/categorias/" + pix).then().statusCode(422);
+        como(admin).when().delete("/categorias/" + pix).then().statusCode(422);
 
-        int nova = given().contentType(ContentType.JSON).body(Map.of("descricao", "Mercado"))
+        int nova = como(admin).body(Map.of("descricao", "Mercado"))
                 .when().post("/categorias").then().statusCode(201)
                 .body("sistema", is(false)).extract().path("id");
 
-        given().contentType(ContentType.JSON).body(Map.of("descricao", "Supermercado"))
+        como(admin).body(Map.of("descricao", "Supermercado"))
                 .when().put("/categorias/" + nova).then().statusCode(200).body("descricao", equalTo("Supermercado"));
-        given().when().delete("/categorias/" + nova).then().statusCode(204);
+        como(admin).when().delete("/categorias/" + nova).then().statusCode(204);
     }
 }

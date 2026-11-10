@@ -15,5 +15,7 @@ web/.angular/
 .DS_Store
 Thumbs.db
 
-# Ambiente
+# Ambiente e segredos
 .env
+api/chaves/
+*.pem

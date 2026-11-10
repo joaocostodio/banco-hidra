@@ -13,6 +13,11 @@ public class TratadorDeErros {
     }
 
     @ServerExceptionMapper
+    public Response naoAutorizado(NaoAutorizadoException e) {
+        return Response.status(Response.Status.UNAUTHORIZED).entity(new Erro(e.getMessage())).build();
+    }
+
+    @ServerExceptionMapper
     public Response naoEncontrado(NaoEncontradoException e) {
         return Response.status(Response.Status.NOT_FOUND).entity(new Erro(e.getMessage())).build();
     }

@@ -2,12 +2,16 @@ package bancohidra.controller;
 
 import bancohidra.dto.ContaDtos.ContaResponse;
 import bancohidra.dto.ContaDtos.DepositoRequest;
+import bancohidra.dto.PixDtos.ChaveResponse;
 import bancohidra.dto.TransacaoDtos.TransacaoResponse;
+import bancohidra.entity.ChavePix;
 import bancohidra.entity.Conta;
 import bancohidra.entity.Transacao;
 import bancohidra.exception.NaoEncontradoException;
-import bancohidra.exception.RegraNegocioException;
+import bancohidra.security.Papeis;
+import bancohidra.service.ConsultaService;
 import bancohidra.service.MovimentacaoService;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -25,7 +29,9 @@ import jakarta.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.util.List;
 
+/** Gestão das contas pelo administrador. O cliente usa /minha-conta. */
 @Path("/contas")
+@RolesAllowed(Papeis.ADMIN)
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ContaController {
@@ -33,9 +39,12 @@ public class ContaController {
     @Inject
     MovimentacaoService movimentacaoService;
 
+    @Inject
+    ConsultaService consultaService;
+
     @GET
     public List<ContaResponse> listar() {
-        List<Conta> contas = Conta.list("from Conta c join fetch c.titular t order by c.numero");
+        List<Conta> contas = Conta.list("from Conta c join fetch c.titular t order by t.nome");
         return contas.stream().map(ContaResponse::de).toList();
     }
 
@@ -45,22 +54,19 @@ public class ContaController {
         return ContaResponse.de(encontrar(id));
     }
 
-    /**
-     * Extrato do período (padrão: últimos 30 dias), do mais recente para o mais antigo.
-     * Datas no formato AAAA-MM-DD; o dia final entra inteiro.
-     */
+    /** Datas no formato AAAA-MM-DD (padrão: últimos 30 dias). */
     @GET
     @Path("/{id}/extrato")
     public List<TransacaoResponse> extrato(@PathParam("id") Long id,
                                            @QueryParam("inicio") LocalDate inicio,
                                            @QueryParam("fim") LocalDate fim) {
-        LocalDate ate = fim != null ? fim : LocalDate.now();
-        LocalDate de = inicio != null ? inicio : ate.minusDays(30);
-        if (de.isAfter(ate)) {
-            throw new RegraNegocioException("A data inicial deve ser anterior à final");
-        }
-        return Transacao.extrato(encontrar(id), de.atStartOfDay(), ate.plusDays(1).atStartOfDay())
-                .stream().map(TransacaoResponse::de).toList();
+        return consultaService.extrato(encontrar(id), inicio, fim);
+    }
+
+    @GET
+    @Path("/{id}/chaves-pix")
+    public List<ChaveResponse> chavesPix(@PathParam("id") Long id) {
+        return ChavePix.daConta(encontrar(id)).stream().map(ChaveResponse::de).toList();
     }
 
     /** Depósito feito pelo banco (ex.: crédito inicial dado pelo administrador). */

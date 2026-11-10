@@ -26,13 +26,16 @@ public final class PixDtos {
         }
     }
 
-    /** O que aparece para quem vai pagar ("você está pagando..."), sem expor dados completos. */
+    /**
+     * O que aparece para quem vai pagar ("você está pagando..."), sem expor dados completos.
+     * {@code tipoChave} vem preenchido só quando a busca foi por chave Pix.
+     */
     public record DestinatarioResponse(String nome, String cpfMascarado, String banco, String agencia,
                                        String conta, TipoChavePix tipoChave) {
     }
 
+    /** A origem é sempre a conta de quem está logado. */
     public record PixRequest(
-            @NotNull(message = "Informe a conta de origem") Long contaOrigemId,
             @NotBlank(message = "Informe a chave Pix") String chave,
             @NotNull(message = "Informe o valor") BigDecimal valor,
             @Size(max = 200) String descricao) {

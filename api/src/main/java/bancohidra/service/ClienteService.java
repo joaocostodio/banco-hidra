@@ -7,6 +7,7 @@ import bancohidra.entity.Perfil;
 import bancohidra.entity.Usuario;
 import bancohidra.exception.NaoEncontradoException;
 import bancohidra.exception.RegraNegocioException;
+import bancohidra.security.SenhaProvisoria;
 import bancohidra.util.Cpf;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -16,9 +17,13 @@ import java.util.concurrent.ThreadLocalRandom;
 @ApplicationScoped
 public class ClienteService {
 
-    /** Cadastra o cliente e já abre a conta corrente dele (com saldo zero). */
+    /** A senha provisória só existe aqui, em texto: no banco fica apenas o hash. */
+    public record Cadastro(Conta conta, String senhaProvisoria) {
+    }
+
+    /** Cadastra o cliente, abre a conta corrente dele (saldo zero) e gera a senha provisória. */
     @Transactional
-    public Conta cadastrar(NovoClienteRequest req) {
+    public Cadastro cadastrar(NovoClienteRequest req) {
         String cpf = Cpf.somenteDigitos(req.cpf());
         if (!Cpf.valido(cpf)) {
             throw new RegraNegocioException("CPF inválido");
@@ -36,13 +41,24 @@ public class ClienteService {
         usuario.cpf = cpf;
         usuario.email = email;
         usuario.perfil = Perfil.CLIENTE;
+        String senha = SenhaProvisoria.gerar();
+        usuario.definirSenhaProvisoria(senha);
         usuario.persist();
 
         Conta conta = new Conta();
         conta.titular = usuario;
         conta.numero = numeroLivre();
         conta.persist();
-        return conta;
+        return new Cadastro(conta, senha);
+    }
+
+    /** Cliente esqueceu a senha: o administrador gera outra provisória (e o acesso é desbloqueado). */
+    @Transactional
+    public String novaSenhaProvisoria(Long id) {
+        Usuario usuario = buscar(id);
+        String senha = SenhaProvisoria.gerar();
+        usuario.definirSenhaProvisoria(senha);
+        return senha;
     }
 
     @Transactional

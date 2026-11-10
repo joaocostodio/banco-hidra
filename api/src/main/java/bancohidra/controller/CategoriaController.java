@@ -6,7 +6,9 @@ import bancohidra.entity.Categoria;
 import bancohidra.entity.Transacao;
 import bancohidra.exception.NaoEncontradoException;
 import bancohidra.exception.RegraNegocioException;
+import bancohidra.security.Papeis;
 import io.quarkus.panache.common.Sort;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -23,6 +25,7 @@ import jakarta.ws.rs.core.Response;
 import java.util.List;
 
 @Path("/categorias")
+@RolesAllowed(Papeis.ADMIN)
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class CategoriaController {
