@@ -1,5 +1,5 @@
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -8,7 +8,10 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
+import { Clipboard } from '@angular/cdk/clipboard';
 import { AuthService } from '../../../../common/auth/auth.service';
+import { EnderecoTurma } from '../../../../common/endereco-turma.service';
+import { TrocarSenha } from '../../../acesso/componentes/trocar-senha/trocar-senha';
 import { mensagemDeErro } from '../../../../common/erros';
 import { IconeCategoriaPipe } from '../../../../common/formatos';
 import { Icone } from '../../../../common/icone/icone';
@@ -45,6 +48,9 @@ export class Painel {
   private readonly contas = inject(ContaService);
   private readonly dialog = inject(MatDialog);
   protected readonly auth = inject(AuthService);
+  protected readonly turma = inject(EnderecoTurma);
+  private readonly clipboard = inject(Clipboard);
+  protected readonly copiado = signal(false);
 
   protected readonly resumo = rxResource({ stream: () => this.painel.resumo() });
   protected readonly ultimas = rxResource({ stream: () => this.contas.ultimasTransacoes(6) });
@@ -71,6 +77,20 @@ export class Painel {
   protected recarregar(): void {
     this.resumo.reload();
     this.ultimas.reload();
+  }
+
+  protected copiarEndereco(url: string): void {
+    if (this.clipboard.copy(url)) {
+      this.copiado.set(true);
+      setTimeout(() => this.copiado.set(false), 2500);
+    }
+  }
+
+  protected trocarSenha(): void {
+    this.dialog
+      .open(TrocarSenha)
+      .afterClosed()
+      .subscribe((trocou) => trocou && this.turma.rede.reload());
   }
 
   protected abrirComprovante(t: Transacao): void {

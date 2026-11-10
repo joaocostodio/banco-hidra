@@ -143,6 +143,68 @@ a.kpi:hover {
   color: var(--texto-suave);
 }
 
+/* ---------- Acesso da turma ---------- */
+.corpo-turma {
+  padding: 14px 20px 16px;
+}
+
+.corpo-turma p {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+
+.link-turma {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--raio);
+  border: 1px dashed var(--verde-borda);
+  background: var(--verde-suave);
+  color: var(--verde);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.link-turma .mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.alerta {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--raio);
+  background: var(--aviso-suave);
+  border: 1px solid var(--aviso-borda);
+  color: #f3cf97;
+  font-size: 12.5px;
+}
+
+.alerta .mat-icon {
+  flex: none;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: var(--aviso);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--verde);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* ---------- Atenção ---------- */
 .atencao a {
   display: flex;

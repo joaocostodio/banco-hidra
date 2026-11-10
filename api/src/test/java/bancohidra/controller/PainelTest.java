@@ -86,5 +86,12 @@ class PainelTest {
     void painelEhSoDoAdministrador() {
         Cliente mia = Api.novoCliente("Mia Torres");
         como(mia.token()).when().get("/painel").then().statusCode(403);
+        como(mia.token()).when().get("/painel/rede").then().statusCode(403);
+    }
+
+    @Test
+    void modoTurmaAvisaQueOAdminUsaASenhaPadrao() {
+        como(Api.admin()).when().get("/painel/rede").then().statusCode(200)
+                .body("senhaPadrao", is(true));
     }
 }

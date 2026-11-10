@@ -142,6 +142,28 @@ cd api && ./mvnw test         # 30 testes (os de API sobem um Postgres descartá
 cd web && npm install && npm start   # site em http://localhost:4300
 ```
 
+## Modo turma (colegas acessando do PC deles)
+
+Em desenvolvimento, a API e o site já escutam na rede (não só no `localhost`). Para a turma usar:
+
+1. Todos na **mesma rede Wi-Fi**. Algumas redes públicas (faculdade, lanchonete) isolam os aparelhos entre si;
+   nesse caso ninguém alcança ninguém, e a saída é um roteador próprio ou o celular como roteador.
+2. O firewall do Windows precisa deixar entrar nas portas **4300** e **8080**. Normalmente basta clicar em
+   "Permitir acesso" no aviso que aparece na primeira vez que o Java/Node rodam. Se não aparecer, num PowerShell
+   **como administrador**:
+
+   ```powershell
+   New-NetFirewallRule -DisplayName "Banco Hidra (site e API)" -Direction Inbound -Protocol TCP -LocalPort 4300,8080 -Action Allow
+   ```
+
+   Para desfazer: `Remove-NetFirewallRule -DisplayName "Banco Hidra (site e API)"`.
+3. Suba a API e o site normalmente. O **painel do ADM** mostra o endereço para os colegas
+   (ex.: `http://192.168.0.15:4300`) com botão de copiar. A mensagem da senha provisória já vai com esse endereço.
+4. **Troque a senha do administrador** antes (o painel avisa enquanto ela for a padrão do README).
+
+O site descobre a API pelo próprio endereço (quem abre `http://IP:4300` usa `http://IP:8080`), e a API aceita (CORS)
+sites abertos pelo `localhost` ou por IPs de rede local. Se a API reiniciar, todos precisam entrar de novo.
+
 ## Site (web/)
 
 Angular 22 + Angular Material, seguindo as instruções da disciplina: só CSS, signals, reactive forms,

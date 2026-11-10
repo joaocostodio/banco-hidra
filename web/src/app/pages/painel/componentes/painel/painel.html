@@ -119,6 +119,36 @@
         <p class="legenda">Valor movimentado por dia (depósitos, transferências e Pix).</p>
       </section>
 
+      <section class="cartao turma">
+        <div class="cartao-cab">
+          <h3>Acesso da turma</h3>
+          <span class="espaco"></span>
+          <mat-icon class="muted">wifi</mat-icon>
+        </div>
+        <div class="corpo-turma">
+          @if (turma.url(); as url) {
+            <p>Na mesma rede Wi-Fi, os colegas abrem:</p>
+            <button class="link-turma" (click)="copiarEndereco(url)" matTooltip="Copiar endereço">
+              <span class="num">{{ url }}</span>
+              <mat-icon>{{ copiado() ? 'check' : 'content_copy' }}</mat-icon>
+            </button>
+          } @else if (turma.rede.isLoading()) {
+            <p class="muted">Descobrindo o endereço deste PC na rede…</p>
+          } @else {
+            <p class="muted">Este PC não está conectado a uma rede local.</p>
+          }
+          @if (turma.senhaPadrao()) {
+            <div class="alerta">
+              <mat-icon>warning</mat-icon>
+              <span>
+                Você ainda usa a <b>senha padrão</b> do administrador, que está no README. Antes de abrir para a turma,
+                <button class="link" (click)="trocarSenha()">troque a sua senha</button>.
+              </span>
+            </div>
+          }
+        </div>
+      </section>
+
       <section class="cartao">
         <div class="cartao-cab"><h3>Precisa de atenção</h3></div>
         @if (r.contasBloqueadas === 0 && r.primeiroAcessoPendente === 0) {

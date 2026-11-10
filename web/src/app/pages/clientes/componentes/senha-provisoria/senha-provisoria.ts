@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { EnderecoTurma } from '../../../../common/endereco-turma.service';
 import { Cliente } from '../../model/cliente.model';
 
 export interface DadosSenhaProvisoria {
@@ -22,6 +23,7 @@ export interface DadosSenhaProvisoria {
 export class SenhaProvisoriaDialog {
   protected readonly dados = inject<DadosSenhaProvisoria>(MAT_DIALOG_DATA);
   private readonly clipboard = inject(Clipboard);
+  private readonly turma = inject(EnderecoTurma);
 
   protected readonly copiado = signal<'senha' | 'mensagem' | null>(null);
 
@@ -36,7 +38,7 @@ export class SenhaProvisoriaDialog {
     const texto =
       `Olá, ${cliente.nome.split(' ')[0]}! Sua conta no Banco Hidra está pronta.\n` +
       conta +
-      `Acesse http://localhost:4300 com o e-mail ${cliente.email} e a senha provisória ${senha}.\n` +
+      `Acesse ${this.turma.melhorEndereco()} com o e-mail ${cliente.email} e a senha provisória ${senha}.\n` +
       `No primeiro acesso você vai criar a sua própria senha.`;
     this.copiar('mensagem', texto);
   }
