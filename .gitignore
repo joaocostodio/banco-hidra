@@ -15,6 +15,9 @@ web/.angular/
 .DS_Store
 Thumbs.db
 
+# Ferramentas de teste no navegador
+.playwright-mcp/
+
 # Ambiente e segredos
 .env
 api/chaves/

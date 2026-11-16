@@ -6,32 +6,21 @@ import bancohidra.entity.Conta;
 import bancohidra.entity.Transacao;
 import bancohidra.entity.Usuario;
 import bancohidra.exception.NaoEncontradoException;
-import bancohidra.exception.RegraNegocioException;
+import bancohidra.util.Periodo;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-/** Consultas usadas tanto pelo painel do administrador quanto pelo app do cliente. */
+/** Consultas do painel do administrador (extrato de qualquer conta) e comprovantes. */
 @ApplicationScoped
 public class ConsultaService {
 
-    public static final int DIAS_PADRAO = 30;
-    public static final int DIAS_MAXIMO = 366;
-
-    /** Extrato do período (padrão: últimos 30 dias), do mais recente para o mais antigo; o dia final entra inteiro. */
+    /** Extrato de uma conta no período (padrão: últimos 30 dias), do mais recente para o mais antigo. */
     public List<TransacaoResponse> extrato(Conta conta, LocalDate inicio, LocalDate fim) {
-        LocalDate ate = fim != null ? fim : LocalDate.now();
-        LocalDate de = inicio != null ? inicio : ate.minusDays(DIAS_PADRAO);
-        if (de.isAfter(ate)) {
-            throw new RegraNegocioException("A data inicial deve ser anterior à final");
-        }
-        if (de.plusDays(DIAS_MAXIMO).isBefore(ate)) {
-            throw new RegraNegocioException("O período do extrato pode ter no máximo 1 ano");
-        }
-        return Transacao.extrato(conta, de.atStartOfDay(), ate.plusDays(1).atStartOfDay())
-                .stream().map(TransacaoResponse::de).toList();
+        Periodo p = Periodo.de(inicio, fim, LocalDate.now());
+        return Transacao.extrato(conta, p.inicio(), p.fim()).stream().map(TransacaoResponse::de).toList();
     }
 
     /**

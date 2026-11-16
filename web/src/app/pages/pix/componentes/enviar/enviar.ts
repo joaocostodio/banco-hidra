@@ -97,16 +97,17 @@ export class Enviar implements OnInit {
     this.modo() === 'pix' ? valorOu(this.minha, null)?.saldo : this.origem()?.saldo,
   );
 
+  /** Saídas dos últimos 90 dias (só na transferência): de onde saem os contatos. */
   private readonly historico = rxResource({
-    params: () => (this.modo() === 'transferencia' ? ultimosDias(90) : undefined),
-    stream: ({ params }) => this.minhaConta.extrato(params),
+    params: () => (this.modo() === 'transferencia' ? { ...ultimosDias(90), tipo: 'SAIDA' as const } : undefined),
+    stream: ({ params }) => this.minhaConta.transacoes(params),
   });
 
-  /** Para quem já mandei dinheiro (atalho na transferência). */
+  /** Para quem já mandei dinheiro (atalho na transferência); as minhas contas têm atalho próprio. */
   protected readonly contatos = computed<Contato[]>(() => {
     const vistos = new Map<string, Contato>();
-    for (const t of this.historico.value() ?? []) {
-      if (t.tipo === 'SAIDA' && t.contraparteConta && t.contraparteNome && !vistos.has(t.contraparteConta)) {
+    for (const t of valorOu(this.historico, [])) {
+      if (!t.interna && t.contraparteConta && t.contraparteNome && !vistos.has(t.contraparteConta)) {
         vistos.set(t.contraparteConta, { nome: t.contraparteNome, conta: t.contraparteConta });
       }
     }

@@ -105,14 +105,6 @@ public class MinhaContaController {
                 .stream().map(TransacaoResponse::de).toList();
     }
 
-    /** Extrato da conta principal (mantido para o app antigo; o novo usa /transacoes). */
-    @GET
-    @Path("/extrato")
-    public List<TransacaoResponse> extrato(@QueryParam("inicio") LocalDate inicio,
-                                           @QueryParam("fim") LocalDate fim) {
-        return consultaService.extrato(logado.conta(), inicio, fim);
-    }
-
     /** Lançar uma receita ou despesa numa das minhas contas. */
     @POST
     @Path("/lancamentos")

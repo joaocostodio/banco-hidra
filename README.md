@@ -41,6 +41,8 @@ npm start
 Abra **http://localhost:4300** e clique em **Criar minha conta**, ou entre como administrador
 (`joao` / `moraes`, configurável — ver Segurança).
 
+Roteiro da apresentação, com onde está cada requisito no código: [docs/apresentacao.md](docs/apresentacao.md).
+
 Testes da API (sobem um PostgreSQL descartável sozinhos, pelo Docker):
 
 ```bash

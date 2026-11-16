@@ -12,6 +12,7 @@ import bancohidra.entity.Transacao;
 import bancohidra.entity.Usuario;
 import bancohidra.exception.NaoEncontradoException;
 import bancohidra.exception.RegraNegocioException;
+import bancohidra.util.Periodo;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -30,8 +31,6 @@ import java.util.List;
 @ApplicationScoped
 public class FinancasService {
 
-    public static final int DIAS_PADRAO = 30;
-    public static final int DIAS_MAXIMO = 366;
     public static final int LIMITE_CATEGORIAS_PROPRIAS = 30;
 
     /**
@@ -67,20 +66,13 @@ public class FinancasService {
      */
     public List<Transacao> transacoes(Usuario usuario, Long contaId, Long categoriaId, TipoTransacao tipo,
                                       LocalDate inicio, LocalDate fim) {
-        LocalDate ate = fim != null ? fim : LocalDate.now();
-        LocalDate de = inicio != null ? inicio : ate.minusDays(DIAS_PADRAO);
-        if (de.isAfter(ate)) {
-            throw new RegraNegocioException("A data inicial deve ser anterior à final");
-        }
-        if (de.plusDays(DIAS_MAXIMO).isBefore(ate)) {
-            throw new RegraNegocioException("O período pode ter no máximo 1 ano");
-        }
+        Periodo periodo = Periodo.de(inicio, fim, LocalDate.now());
 
         // Filtros montados só com parâmetros (nunca concatenando o que veio do usuário): sem SQL injection.
         StringBuilder jpql = new StringBuilder("conta.titular = :usuario and dataHora >= :inicio and dataHora < :fim");
         Parameters p = Parameters.with("usuario", usuario)
-                .and("inicio", de.atStartOfDay())
-                .and("fim", ate.plusDays(1).atStartOfDay());
+                .and("inicio", periodo.inicio())
+                .and("fim", periodo.fim());
         if (contaId != null) {
             jpql.append(" and conta = :conta");
             p.and("conta", clienteService.contaDo(usuario, contaId));

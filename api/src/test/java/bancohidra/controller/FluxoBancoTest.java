@@ -79,7 +79,7 @@ class FluxoBancoTest {
         como(beto.token()).when().get("/minha-conta").then().body("saldo", equalTo(25.0f));
 
         // Extrato da Ana: transferência recebida, Pix enviado, depósito (do mais recente ao mais antigo)
-        como(ana.token()).when().get("/minha-conta/extrato")
+        como(ana.token()).when().get("/minha-conta/transacoes")
                 .then().statusCode(200)
                 .body("$", hasSize(3))
                 .body("[0].tipo", equalTo("ENTRADA"))

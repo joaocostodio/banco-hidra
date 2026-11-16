@@ -1,59 +1,47 @@
-# Web
+# Banco Hidra — site (Angular)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.4.
+Site do Banco Hidra: Angular 22 + Angular Material. Visão geral, API e segurança estão no
+[README principal](../README.md).
 
-## Development server
+## Rodar
 
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Com a API rodando (porta 8080):
 
 ```bash
-ng generate component component-name
+npm install
+npm start          # http://localhost:4300 (também na rede, para a turma)
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+O site chama a API em `/api`; o `ng serve` repassa para `http://127.0.0.1:8080` (`proxy.conf.json`).
+Por isso o cookie de sessão é do próprio site.
+
+## Compilar
 
 ```bash
-ng generate --help
+npm run build      # gera dist/web (produção)
 ```
 
-## Building
+Em produção, sirva `dist/web/browser` num servidor que também repasse `/api` para a API (como o proxy faz em dev).
 
-To build the project run:
+## Organização
 
-```bash
-ng build
+Segue as instruções da disciplina: só CSS, signals, reactive forms, HTML/CSS separados do TypeScript.
+
+```
+src/app/
+├── common/            reaproveitado: sessão (auth), layout, comprovante, diálogos, validações, formatos
+└── pages/
+    ├── acesso/        entrar, criar conta, primeiro acesso, trocar senha
+    ├── minha-conta/   início (resumo), transações (filtros), perfil
+    ├── financas/      minhas contas, lançar receita/despesa, categorias
+    ├── pix/           enviar Pix / transferir, chaves, cobrar com QR code
+    ├── boletos/       emitir, pagar, ver/imprimir
+    ├── painel/        (ADM) números do banco
+    ├── clientes/      (ADM) cadastro e edição de clientes
+    ├── contas/        (ADM) contas, extrato, depósito, bloqueio
+    ├── movimentacoes/ (ADM) últimas movimentações
+    └── categorias/    (ADM) categorias padrão
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Cada funcionalidade tem `model/` (interfaces), `services/` (chamadas à API e regras de tela),
+`routes/` (rotas, carregadas sob demanda) e `componentes/`.

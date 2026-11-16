@@ -111,10 +111,6 @@ export class MinhaContaService {
     return this.http.get<MeusDados>(`${this.url}/dados`);
   }
 
-  extrato(periodo: Periodo): Observable<Transacao[]> {
-    return this.http.get<Transacao[]>(`${this.url}/extrato`, { params: { ...periodo } });
-  }
-
   comprovante(autenticacao: string): Observable<Comprovante> {
     return this.http.get<Comprovante>(`${this.url}/comprovantes/${autenticacao}`);
   }
