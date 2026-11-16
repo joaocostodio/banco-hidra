@@ -40,12 +40,13 @@ public class Inicializacao {
             categoria.persist();
         }
 
-        if (Usuario.count("perfil", Perfil.ADMIN) == 0) {
+        // Só cria: se o administrador já existe, a senha que ele trocou pelo painel é mantida.
+        if (Usuario.porEmail(adminEmail) == null) {
             Usuario admin = new Usuario();
             admin.nome = adminNome;
-            admin.email = adminEmail.toLowerCase();
+            admin.email = adminEmail.trim().toLowerCase();
             admin.perfil = Perfil.ADMIN;
-            admin.definirSenha(adminSenha);
+            admin.definirSenhaDoServidor(adminSenha);
             admin.persist();
             Log.infof("Administrador criado: %s", admin.email);
         }

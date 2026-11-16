@@ -11,8 +11,9 @@ public final class AuthDtos {
     private AuthDtos() {
     }
 
+    /** {@code email}: o e-mail do cliente ou o login do administrador (ex.: "joao"). */
     public record LoginRequest(
-            @NotBlank(message = "Informe o e-mail") String email,
+            @NotBlank(message = "Informe o e-mail ou usuário") String email,
             @NotBlank(message = "Informe a senha") String senha) {
     }
 

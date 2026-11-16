@@ -33,7 +33,8 @@ export class Entrar {
   readonly motivo = input<string>();
 
   protected readonly form = inject(NonNullableFormBuilder).group({
-    email: ['', [Validators.required, Validators.email]],
+    // E-mail (cliente) ou nome de usuário (administrador, ex.: "joao"): não exige formato de e-mail.
+    email: ['', Validators.required],
     senha: ['', Validators.required],
   });
 

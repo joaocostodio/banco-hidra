@@ -1,0 +1,73 @@
+<h1>Boletos</h1>
+
+<div class="acoes">
+  <a class="acao principal" routerLink="/app/boletos/pagar">
+    <span class="bola"><mat-icon>barcode_reader</mat-icon></span>
+    <span>
+      <b>Pagar boleto</b>
+      <small>digite ou cole a linha digitável</small>
+    </span>
+    <mat-icon>chevron_right</mat-icon>
+  </a>
+  <a class="acao" routerLink="/app/boletos/emitir">
+    <span class="bola"><mat-icon>request_quote</mat-icon></span>
+    <span>
+      <b>Emitir boleto</b>
+      <small>cobre alguém com valor e vencimento</small>
+    </span>
+    <mat-icon>chevron_right</mat-icon>
+  </a>
+</div>
+
+@if (erro()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+}
+
+<section class="cartao">
+  <div class="cartao-cab">
+    <h3>Boletos que emiti</h3>
+    <span class="espaco"></span>
+    @if (aReceber() > 0) {
+      <span class="muted total">A receber: <b class="num">{{ aReceber() | currency: 'BRL' }}</b></span>
+    }
+  </div>
+
+  @if (boletos.isLoading() && !boletos.value()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (boletos.value(); as lista) {
+    @if (lista.length === 0) {
+      <div class="vazio">
+        <mat-icon>receipt</mat-icon>
+        Você ainda não emitiu boletos.<br />
+        Emita um para cobrar alguém: a pessoa paga pela linha digitável.
+      </div>
+    } @else {
+      <ul>
+        @for (b of lista; track b.id) {
+          @let s = b | situacaoBoleto;
+          <li>
+            <a [routerLink]="['/app/boletos', b.id]">
+              <span class="ico-tx entrada"><mat-icon>receipt</mat-icon></span>
+              <span class="texto">
+                <b>{{ b.descricao || 'Boleto' }}</b>
+                <small>
+                  @if (b.status === 'PAGO') {
+                    Pago por {{ b.pagadorNome }} em {{ b.pagoEm | date: 'dd/MM' }}
+                  } @else {
+                    Vence {{ b.vencimento | date: 'dd/MM/yyyy' }}
+                  }
+                </small>
+              </span>
+              <span class="dir">
+                <b class="num">{{ (b.valorPago ?? b.valor) | currency: 'BRL' }}</b>
+                <span class="selo" [class]="s.classe">{{ s.texto }}</span>
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>

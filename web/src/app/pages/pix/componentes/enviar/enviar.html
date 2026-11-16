@@ -27,10 +27,10 @@
     @if (ehPix()) {
       <form [formGroup]="destinoPix" (ngSubmit)="buscarDestino()" novalidate>
         <mat-form-field>
-          <mat-label>Chave Pix</mat-label>
+          <mat-label>Chave Pix ou código copia e cola</mat-label>
           <mat-icon matPrefix svgIcon="pix" />
           <input #foco matInput formControlName="chave" autocomplete="off" />
-          <mat-hint>CPF, e-mail, celular ou chave aleatória</mat-hint>
+          <mat-hint>CPF, e-mail, celular, chave aleatória ou o código de uma cobrança</mat-hint>
           <mat-error>Digite a chave Pix de quem vai receber</mat-error>
         </mat-form-field>
         <button matButton="filled" class="largo" type="submit" [disabled]="ocupado()">Continuar</button>

@@ -34,7 +34,8 @@ export class LayoutCliente {
     { rota: '/app/extrato', icone: 'receipt_long', nome: 'Extrato' },
     { rota: '/app/pix', icone: 'pix', nome: 'Pix' },
     { rota: '/app/transferir', icone: 'swap_horiz', nome: 'Transferir' },
-    { rota: '/app/perfil', icone: 'person', nome: 'Perfil' },
+    // O perfil continua no menu do avatar (canto de cima), que aparece também no celular.
+    { rota: '/app/boletos', icone: 'receipt', nome: 'Boletos' },
   ];
 
   protected trocarSenha(): void {

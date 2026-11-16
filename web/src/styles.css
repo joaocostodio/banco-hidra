@@ -437,3 +437,22 @@ kbd,
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- Impressão (boleto): só sai o que tem a classe .imprimir ---------- */
+@media print {
+  body {
+    background: #fff !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .imprimir,
+  .imprimir * {
+    visibility: visible;
+  }
+  .imprimir {
+    position: absolute;
+    inset: 0 0 auto 0;
+    opacity: 1 !important;
+  }
+}

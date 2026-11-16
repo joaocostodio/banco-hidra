@@ -21,7 +21,7 @@ public class AuthService {
 
     /** Hash qualquer, usado para gastar o mesmo tempo quando o e-mail não existe. */
     private static final String HASH_FALSO = BCrypt.hashpw("nao-existe", BCrypt.gensalt());
-    private static final String CREDENCIAIS_INVALIDAS = "E-mail ou senha incorretos";
+    private static final String CREDENCIAIS_INVALIDAS = "Usuário ou senha incorretos";
 
     @ConfigProperty(name = "smallrye.jwt.new-token.lifespan", defaultValue = "3600")
     long validadeSegundos;

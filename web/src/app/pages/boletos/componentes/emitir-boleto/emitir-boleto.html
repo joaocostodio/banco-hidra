@@ -1,0 +1,46 @@
+<header class="cabeca">
+  <a matIconButton routerLink="/app/boletos" aria-label="Voltar"><mat-icon>arrow_back</mat-icon></a>
+  <h1>Emitir boleto</h1>
+</header>
+
+@if (erro()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+}
+
+<form [formGroup]="form" (ngSubmit)="emitir()" novalidate>
+  <mat-form-field class="campo-valor">
+    <mat-label>Valor</mat-label>
+    <span matTextPrefix>R$&nbsp;</span>
+    <input matInput class="num" formControlName="valor" inputmode="decimal" placeholder="0,00" autocomplete="off" />
+    @if (form.controls.valor.hasError('valor')) {
+      <mat-error>{{ form.controls.valor.getError('valor') }}</mat-error>
+    } @else {
+      <mat-error>Digite o valor</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Vencimento</mat-label>
+    <input matInput [matDatepicker]="calendario" formControlName="vencimento" [min]="hoje" [max]="limite" />
+    <mat-datepicker-toggle matIconSuffix [for]="calendario" />
+    <mat-datepicker #calendario />
+    <mat-hint>De hoje até 1 ano</mat-hint>
+    <mat-error>Escolha uma data entre hoje e daqui a 1 ano</mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Descrição (opcional)</mat-label>
+    <input matInput formControlName="descricao" maxlength="100" autocomplete="off" placeholder="Ex.: Aluguel de novembro" />
+    <mat-hint align="end">{{ form.controls.descricao.value.length }}/100</mat-hint>
+  </mat-form-field>
+
+  <p class="dica"><mat-icon>info</mat-icon>{{ regraAtraso }}</p>
+
+  <button matButton="filled" class="largo" type="submit" [disabled]="ocupado()">
+    <mat-icon>request_quote</mat-icon>
+    Emitir boleto
+  </button>
+  @if (ocupado()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+</form>

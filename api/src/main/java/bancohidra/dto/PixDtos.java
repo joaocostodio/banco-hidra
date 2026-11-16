@@ -34,6 +34,26 @@ public final class PixDtos {
                                        String conta, TipoChavePix tipoChave) {
     }
 
+    /** Cobrança por QR code: uma das minhas chaves; sem valor, quem paga escolhe quanto. */
+    public record CobrancaRequest(
+            @NotNull(message = "Escolha a chave que vai receber") Long chaveId,
+            BigDecimal valor,
+            @Size(max = 60, message = "Mensagem com no máximo 60 caracteres") String descricao) {
+    }
+
+    /** {@code codigo} é o "Pix copia e cola"; o site desenha o QR code a partir dele. */
+    public record CobrancaResponse(String codigo, String chave, TipoChavePix tipoChave, BigDecimal valor,
+                                   String descricao) {
+    }
+
+    public record LerCodigoRequest(@NotBlank(message = "Cole o código Pix") String codigo) {
+    }
+
+    /** O que o pagador vê depois de colar o código, antes de confirmar. Valor nulo: ele digita. */
+    public record CodigoLidoResponse(String chave, BigDecimal valor, String descricao,
+                                     DestinatarioResponse destinatario) {
+    }
+
     /** A origem é sempre a conta de quem está logado. */
     public record PixRequest(
             @NotBlank(message = "Informe a chave Pix") String chave,

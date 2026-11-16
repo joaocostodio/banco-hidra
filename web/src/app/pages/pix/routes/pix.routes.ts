@@ -10,5 +10,10 @@ export const PIX_ROUTES: Routes = [
     loadComponent: () => import('../componentes/area-pix/area-pix').then((m) => m.AreaPix),
   },
   { path: 'pix/enviar', title: 'Enviar Pix', data: { modo: 'pix' }, loadComponent: enviar },
+  {
+    path: 'pix/cobrar',
+    title: 'Cobrar com QR code',
+    loadComponent: () => import('../componentes/cobrar/cobrar').then((m) => m.Cobrar),
+  },
   { path: 'transferir', title: 'Transferir', data: { modo: 'transferencia' }, loadComponent: enviar },
 ];

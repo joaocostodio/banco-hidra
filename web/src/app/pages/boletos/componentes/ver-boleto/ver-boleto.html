@@ -1,0 +1,98 @@
+<header class="cabeca nao-imprimir">
+  <a matIconButton routerLink="/app/boletos" aria-label="Voltar"><mat-icon>arrow_back</mat-icon></a>
+  <h1>Boleto</h1>
+  @if (situacao(); as s) {
+    <span class="selo" [class]="s.classe">{{ s.texto }}</span>
+  }
+</header>
+
+@if (erro()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+}
+@if (boleto.isLoading() && !boleto.value()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (boleto.value(); as b) {
+  @if (novo() && b.status === 'ABERTO') {
+    <div class="faixa nao-imprimir">
+      <mat-icon class="icone-cheio">check_circle</mat-icon>
+      <span>Boleto emitido! Copie a linha digitável e mande para quem vai pagar.</span>
+    </div>
+  }
+
+  @if (b.status === 'PAGO') {
+    <div class="faixa nao-imprimir">
+      <mat-icon class="icone-cheio">paid</mat-icon>
+      <span>
+        Pago por <b>{{ b.pagadorNome }}</b> em {{ b.pagoEm | date: "dd/MM/yyyy 'às' HH:mm" }}:
+        <b class="num">{{ b.valorPago | currency: 'BRL' }}</b>
+      </span>
+      <button matButton (click)="comprovante(b)">Comprovante</button>
+    </div>
+  }
+
+  <!-- O "papel" do boleto: é a única parte que sai na impressão. -->
+  <article class="papel imprimir" [class.inativo]="b.status !== 'ABERTO'">
+    <div class="topo">
+      <span class="banco"><img src="hidra.svg" alt="" />Banco Hidra</span>
+      <span class="codigo-banco num">999-9</span>
+      <span class="linha num">{{ b.linhaDigitavel }}</span>
+    </div>
+
+    <dl class="campos">
+      <div class="largo">
+        <dt>Beneficiário</dt>
+        <dd>{{ b.beneficiarioNome }}</dd>
+      </div>
+      <div>
+        <dt>Vencimento</dt>
+        <dd class="num destaque">{{ b.vencimento | date: 'dd/MM/yyyy' }}</dd>
+      </div>
+      <div>
+        <dt>Agência / conta do beneficiário</dt>
+        <dd class="num">{{ b.agencia }} / {{ b.conta }}</dd>
+      </div>
+      <div>
+        <dt>Data do documento</dt>
+        <dd class="num">{{ b.emitidoEm | date: 'dd/MM/yyyy' }}</dd>
+      </div>
+      <div>
+        <dt>Valor do documento</dt>
+        <dd class="num destaque">{{ b.valor | currency: 'BRL' }}</dd>
+      </div>
+      <div class="largo">
+        <dt>Instruções</dt>
+        <dd>
+          @if (b.descricao) {
+            {{ b.descricao }}<br />
+          }
+          {{ regraAtraso }}<br />
+          Pague no app do Banco Hidra: Boletos → Pagar boleto.
+        </dd>
+      </div>
+    </dl>
+
+    <app-codigo-barras [codigo]="b.codigoBarras" />
+    <p class="aviso-ficticio">Boleto fictício · Banco Hidra · projeto acadêmico de POO</p>
+  </article>
+
+  <div class="botoes nao-imprimir">
+    @if (b.status === 'ABERTO') {
+      <button matButton="filled" (click)="copiar(b)">
+        <mat-icon>{{ copiado() ? 'check' : 'content_copy' }}</mat-icon>
+        {{ copiado() ? 'Copiado!' : 'Copiar linha digitável' }}
+      </button>
+    }
+    <button matButton="outlined" (click)="imprimir()">
+      <mat-icon>print</mat-icon>
+      Imprimir / salvar PDF
+    </button>
+    @if (b.status === 'ABERTO') {
+      <button matButton class="perigo" (click)="cancelar(b)">
+        <mat-icon>block</mat-icon>
+        Cancelar boleto
+      </button>
+    }
+  </div>
+}

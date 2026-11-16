@@ -17,6 +17,7 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
+            "allowedCommonJsDependencies": ["qrcode"],
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
@@ -54,7 +55,9 @@
           "builder": "@angular/build:dev-server",
           "options": {
             "port": 4300,
-            "host": "0.0.0.0"
+            "host": "0.0.0.0",
+            "proxyConfig": "proxy.conf.json",
+            "allowedHosts": [".trycloudflare.com"]
           },
           "configurations": {
             "production": {

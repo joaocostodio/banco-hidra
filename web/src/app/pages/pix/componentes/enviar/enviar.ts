@@ -16,7 +16,7 @@ import { mensagemDeErro } from '../../../../common/erros';
 import { IniciaisPipe } from '../../../../common/formatos';
 import { lerValor, somenteDigitos, valorValidator } from '../../../../common/validadores';
 import { Destinatario, Transacao } from '../../../minha-conta/model/minha-conta.model';
-import { MinhaContaService, ultimosDias } from '../../../minha-conta/services/minha-conta.service';
+import { MinhaContaService, pareceCodigoPix, ultimosDias } from '../../../minha-conta/services/minha-conta.service';
 import { NOME_TIPO_CHAVE } from '../../services/chaves';
 
 export type ModoEnvio = 'pix' | 'transferencia';
@@ -70,6 +70,8 @@ export class Enviar implements OnInit {
   protected readonly erro = signal('');
   protected readonly destinatario = signal<Destinatario | null>(null);
   protected readonly resultado = signal<Transacao | null>(null);
+  /** Veio de um "Pix copia e cola" com valor: não dá para mudar o valor. */
+  protected readonly valorFixo = signal(false);
 
   protected readonly minha = rxResource({ stream: () => this.minhaConta.conta() });
   private readonly historico = rxResource({
@@ -144,6 +146,10 @@ export class Enviar implements OnInit {
       form.markAllAsTouched();
       return;
     }
+    if (this.ehPix() && pareceCodigoPix(this.destinoPix.controls.chave.value)) {
+      this.lerCodigo(this.destinoPix.controls.chave.value.trim());
+      return;
+    }
     const busca: Observable<Destinatario> = this.ehPix()
       ? this.minhaConta.destinatarioPorChave(this.destinoPix.controls.chave.value.trim())
       : this.minhaConta.destinatarioPorConta(this.destinoConta.controls.agencia.value, this.destinoConta.controls.numero.value);
@@ -169,6 +175,39 @@ export class Enviar implements OnInit {
               : 'Não encontramos essa conta. Confira agência e número.'
             : mensagemDeErro(e),
         );
+      },
+    });
+  }
+
+  /**
+   * "Pix copia e cola": a API confere o código e diz de quem é a chave. Se a cobrança já tem
+   * valor, ele fica travado e a tela pula direto para a confirmação.
+   */
+  private lerCodigo(codigo: string): void {
+    this.ocupado.set(true);
+    this.erro.set('');
+    this.minhaConta.lerCodigoPix(codigo).subscribe({
+      next: (lido) => {
+        this.ocupado.set(false);
+        if (lido.destinatario.conta === this.minha.value()?.numero) {
+          this.erro.set('Esse código é seu: mande para quem vai te pagar.');
+          return;
+        }
+        this.destinoPix.setValue({ chave: lido.chave });
+        this.destinatario.set(lido.destinatario);
+        this.valores.controls.descricao.setValue(lido.descricao ?? '');
+        if (lido.valor) {
+          this.valorFixo.set(true);
+          this.valores.controls.valor.setValue(lido.valor.toFixed(2).replace('.', ','));
+          this.valores.controls.valor.disable();
+          this.passo.set('confirmar');
+        } else {
+          this.passo.set('valor');
+        }
+      },
+      error: (e) => {
+        this.ocupado.set(false);
+        this.erro.set(mensagemDeErro(e));
       },
     });
   }
@@ -220,6 +259,10 @@ export class Enviar implements OnInit {
   // ---------- Navegação ----------
   protected voltar(): void {
     this.erro.set('');
+    if (this.valorFixo()) {
+      this.recomecar(); // cobrança com valor travado: voltar é escolher outro código
+      return;
+    }
     this.passo.update((p) => (p === 'confirmar' ? 'valor' : 'destino'));
   }
 
@@ -227,6 +270,8 @@ export class Enviar implements OnInit {
     this.destinoPix.reset();
     this.destinoConta.reset();
     this.valores.reset();
+    this.valores.controls.valor.enable();
+    this.valorFixo.set(false);
     this.destinatario.set(null);
     this.resultado.set(null);
     this.erro.set('');

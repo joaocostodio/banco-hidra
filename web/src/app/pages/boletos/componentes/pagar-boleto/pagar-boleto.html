@@ -1,0 +1,117 @@
+@if (passo() !== 'pronto') {
+  <header class="cabeca">
+    @if (passo() === 'linha') {
+      <a matIconButton routerLink="/app/boletos" aria-label="Voltar"><mat-icon>arrow_back</mat-icon></a>
+    } @else {
+      <button matIconButton (click)="voltar()" aria-label="Voltar"><mat-icon>arrow_back</mat-icon></button>
+    }
+    <h1>Pagar boleto</h1>
+  </header>
+}
+
+@if (erro()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+}
+
+@switch (passo()) {
+  @case ('linha') {
+    <form [formGroup]="form" (ngSubmit)="consultar()" novalidate>
+      <mat-form-field>
+        <mat-label>Linha digitável</mat-label>
+        <mat-icon matPrefix>barcode_reader</mat-icon>
+        <textarea
+          matInput
+          class="num"
+          formControlName="linha"
+          rows="2"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="99990.00000 00000.000000 00000.000000 0 00000000000000"
+        ></textarea>
+        <mat-hint>Pode colar com pontos e espaços</mat-hint>
+        <mat-hint align="end" [class.completo]="digitos() === 47">{{ digitos() }}/47</mat-hint>
+        <mat-error>Digite ou cole a linha digitável do boleto</mat-error>
+      </mat-form-field>
+      <button matButton="filled" class="largo" type="submit" [disabled]="ocupado()">Continuar</button>
+      @if (ocupado()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+    </form>
+  }
+
+  @case ('confirmar') {
+    @if (boleto(); as b) {
+      <div class="resumo">
+        <small>Você vai pagar</small>
+        <div class="grande num">{{ b.total | currency: 'BRL' }}</div>
+        <small>Saldo depois: {{ saldoDepois() | currency: 'BRL' }}</small>
+      </div>
+
+      @if (b.diasAtraso > 0) {
+        <div class="aviso">
+          <mat-icon>schedule</mat-icon>
+          <span>Boleto vencido há {{ b.diasAtraso }} {{ b.diasAtraso === 1 ? 'dia' : 'dias' }}: o valor tem multa e juros.</span>
+        </div>
+      }
+
+      <dl class="cartao detalhes">
+        <dt>Para</dt>
+        <dd><b>{{ b.beneficiario.nome }}</b></dd>
+        <dt>CPF</dt>
+        <dd class="num">{{ b.beneficiario.cpfMascarado }}</dd>
+        <dt>Banco / agência / conta</dt>
+        <dd class="num">{{ b.beneficiario.banco }} · {{ b.beneficiario.agencia }} / {{ b.beneficiario.conta }}</dd>
+        @if (b.descricao) {
+          <dt>Descrição</dt>
+          <dd class="quebra">{{ b.descricao }}</dd>
+        }
+        <dt>Vencimento</dt>
+        <dd>{{ b.vencimento | date: 'dd/MM/yyyy' }}</dd>
+        <dt>Valor do boleto</dt>
+        <dd class="num">{{ b.valor | currency: 'BRL' }}</dd>
+        @if (b.diasAtraso > 0) {
+          <dt>Multa (2%)</dt>
+          <dd class="num">{{ b.multa | currency: 'BRL' }}</dd>
+          <dt>Juros ({{ b.diasAtraso }} {{ b.diasAtraso === 1 ? 'dia' : 'dias' }})</dt>
+          <dd class="num">{{ b.juros | currency: 'BRL' }}</dd>
+        }
+        <dt>Linha digitável</dt>
+        <dd class="num quebra pequena">{{ b.linhaDigitavel }}</dd>
+      </dl>
+
+      @if (saldoDepois() < 0) {
+        <div class="erro-geral"><mat-icon>error</mat-icon>Saldo insuficiente para pagar este boleto.</div>
+      }
+
+      <button matButton="filled" class="largo" (click)="pagar()" [disabled]="ocupado() || saldoDepois() < 0">
+        <mat-icon>check</mat-icon>
+        Pagar {{ b.total | currency: 'BRL' }}
+      </button>
+      @if (ocupado()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+    }
+  }
+
+  @case ('pronto') {
+    @if (resultado(); as t) {
+      <section class="pronto">
+        <div class="selo"><mat-icon class="icone-cheio">check_circle</mat-icon></div>
+        <h1>Boleto pago!</h1>
+        <div class="grande num">{{ t.valor | currency: 'BRL' }}</div>
+        <p>
+          para <b>{{ t.contraparteNome }}</b><br />
+          <span class="muted">{{ t.dataHora | date: "dd/MM/yyyy 'às' HH:mm" }}</span>
+        </p>
+        <div class="botoes">
+          <button matButton="filled" (click)="abrirComprovante()">
+            <mat-icon>receipt_long</mat-icon>
+            Ver comprovante
+          </button>
+          <button matButton="outlined" (click)="recomecar()">Pagar outro boleto</button>
+          <a matButton routerLink="/app">Voltar ao início</a>
+        </div>
+      </section>
+    }
+  }
+}

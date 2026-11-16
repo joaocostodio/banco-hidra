@@ -1,0 +1,84 @@
+<header class="cabeca">
+  <a matIconButton routerLink="/app/pix" aria-label="Voltar"><mat-icon>arrow_back</mat-icon></a>
+  <h1>Cobrar com QR code</h1>
+</header>
+
+@if (erro()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+}
+
+@if (cobranca(); as c) {
+  <section class="cartao qr-cartao">
+    <img class="qr" [src]="qr()" alt="QR code da cobrança Pix" />
+    <div class="quanto">
+      @if (c.valor) {
+        <div class="grande num">{{ c.valor | currency: 'BRL' }}</div>
+      } @else {
+        <div class="livre">Quem pagar escolhe o valor</div>
+      }
+      @if (c.descricao) {
+        <small class="muted">{{ c.descricao }}</small>
+      }
+      <small class="muted">Recebe em {{ nomes[c.tipoChave] }}:<span class="num">{{ c.chave | chaveLegivel: c.tipoChave }}</span></small>
+    </div>
+
+    <label class="rotulo" for="codigo">Pix copia e cola</label>
+    <textarea id="codigo" class="codigo num" readonly rows="4" [value]="c.codigo" (focus)="$any($event.target).select()"></textarea>
+
+    <button matButton="filled" class="largo" (click)="copiar(c)">
+      <mat-icon>{{ copiado() ? 'check' : 'content_copy' }}</mat-icon>
+      {{ copiado() ? 'Copiado!' : 'Copiar código' }}
+    </button>
+    <button matButton="outlined" class="largo" (click)="novaCobranca()">Nova cobrança</button>
+  </section>
+
+  <p class="dica">
+    <mat-icon>lightbulb</mat-icon>
+    Quem vai pagar abre <b>Pix → Enviar Pix</b> e cola o código no campo da chave. O dinheiro cai na hora.
+  </p>
+} @else {
+  @if (chaves.isLoading() && !chaves.value()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (semChaves()) {
+    <div class="cartao vazio">
+      <mat-icon>key_off</mat-icon>
+      Para cobrar com QR code você precisa de uma chave Pix.
+      <a matButton="filled" routerLink="/app/pix" [queryParams]="{ nova: 1 }">Cadastrar chave</a>
+    </div>
+  } @else if (chaves.value(); as lista) {
+    <form [formGroup]="form" (ngSubmit)="gerar()" novalidate>
+      <mat-form-field>
+        <mat-label>Receber na chave</mat-label>
+        <mat-select formControlName="chaveId">
+          @for (k of lista; track k.id) {
+            <mat-option [value]="k.id">{{ nomes[k.tipo] }} · {{ k.valor | chaveLegivel: k.tipo }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="campo-valor">
+        <mat-label>Valor (opcional)</mat-label>
+        <span matTextPrefix>R$&nbsp;</span>
+        <input matInput class="num" formControlName="valor" inputmode="decimal" placeholder="0,00" autocomplete="off" />
+        <mat-hint>Em branco: quem pagar digita o valor</mat-hint>
+        <mat-error>{{ form.controls.valor.getError('valor') }}</mat-error>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Mensagem (opcional)</mat-label>
+        <input matInput formControlName="descricao" maxlength="60" autocomplete="off" placeholder="Ex.: Pizza de sábado" />
+        <mat-hint align="end">{{ form.controls.descricao.value.length }}/60</mat-hint>
+      </mat-form-field>
+
+      <button matButton="filled" class="largo" type="submit" [disabled]="ocupado()">
+        <mat-icon>qr_code_2</mat-icon>
+        Gerar QR code
+      </button>
+      @if (ocupado()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+    </form>
+  }
+}

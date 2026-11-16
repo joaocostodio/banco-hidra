@@ -30,8 +30,9 @@ Baseado nos projetos de aula [finance-api](https://github.com/tiagoseibel/financ
 **App do cliente**
 - Saldo (com opção de ocultar) e últimas transações
 - Extrato com filtros
-- Pix: enviar por chave, minhas chaves, cobrar com QR code
-- Pagamento de boleto (simulado) e comprovantes
+- Pix: enviar por chave ou por código copia e cola, minhas chaves, cobrar com QR code
+- Boletos: emitir (com linha digitável e código de barras para imprimir), pagar o de um colega
+  (com multa e juros se vencido), cancelar; comprovantes
 
 ## Modelo de dados
 
@@ -42,6 +43,7 @@ Baseado nos projetos de aula [finance-api](https://github.com/tiagoseibel/financ
 | `Transacao` | tipo (E/S), valor, data, descrição, categoria, conta, contraparte |
 | `Categoria` | descrição |
 | `ChavePix` | tipo, valor, conta |
+| `Boleto` | linha digitável, código de barras, beneficiário, valor, vencimento, status (`ABERTO` / `PAGO` / `CANCELADO`), pagador |
 
 O saldo é **encapsulado** na entidade `Conta`: só muda pelos métodos `depositar()` e `sacar()`,
 que validam valor e saldo disponível.
@@ -52,7 +54,7 @@ que validam valor e saldo disponível.
 - [x] 2. Login e perfis (JWT)
 - [x] 3. Painel ADM (Angular + Material com o tema da Hidra; esboço das telas em `docs/esboco/index.html`)
 - [x] 4. App do cliente: saldo, extrato, Pix (enviar e chaves), transferência, comprovante, perfil
-- [ ] 5. Extras: QR code, boleto, comprovante, testes
+- [x] 5. Extras: cobrança Pix com QR code (copia e cola), boleto entre clientes, testes (51)
 
 ## API
 
@@ -105,6 +107,12 @@ O administrador não transfere dinheiro de clientes: só deposita. Transferênci
 | DELETE | `/minha-conta/pix/chaves/{id}` | Exclui chave |
 | GET | `/minha-conta/pix/destinatario?chave=` | Quem recebe (nome e CPF mascarado) antes de confirmar |
 | POST | `/minha-conta/pix` | Envia Pix (`chave`, `valor`, `descricao`) |
+| POST | `/minha-conta/pix/cobrancas` | Cobrança: `chaveId` (uma das minhas), `valor` (opcional), `descricao` → `codigo` (Pix copia e cola) |
+| POST | `/minha-conta/pix/ler-codigo` | `codigo` colado pelo pagador → chave, valor, mensagem e quem recebe |
+| GET/POST | `/minha-conta/boletos` | Boletos que emiti / emite (`valor`, `vencimento`, `descricao`) |
+| GET/DELETE | `/minha-conta/boletos/{id}` | Busca / cancela (só aberto) |
+| GET | `/minha-conta/boletos/consulta?linha=` | Confere a linha digitável (ou o código de barras): beneficiário e total do dia |
+| POST | `/minha-conta/boletos/pagamento` | Paga (`linha`) e devolve a transação (comprovante) |
 
 ## Segurança
 
@@ -113,8 +121,9 @@ O administrador não transfere dinheiro de clientes: só deposita. Transferênci
 - **Senha:** mínimo 8 caracteres, com letras e números; guardada só como hash **BCrypt**.
 - **Tentativas:** 5 senhas erradas seguidas bloqueiam o acesso por 15 minutos (uma nova senha provisória libera).
 - E-mail inexistente e senha errada dão a mesma resposta, no mesmo tempo (não revela quem é cliente).
-- **Administrador inicial:** criado na primeira execução com `admin@hidra.com` / `hidra123`
-  (troque com a variável `BANCO_ADMIN_SENHA`).
+- **Administrador inicial:** criado ao subir a API com o usuário `joao` / senha `moraes` (o login aceita e-mail
+  ou nome de usuário). Troque com as variáveis `BANCO_ADMIN_LOGIN` e `BANCO_ADMIN_SENHA`. Essa senha vem da
+  configuração do servidor e não passa pela regra de senha forte; se trocar pelo painel, a nova precisa ser forte.
 - **Chaves do token:** em dev e nos testes o Quarkus gera um par RSA na memória (todo login cai quando a API reinicia).
   Em produção gere chaves próprias, que **não** vão para o Git:
 
@@ -130,6 +139,14 @@ O administrador não transfere dinheiro de clientes: só deposita. Transferênci
   grava as duas pontas com a mesma autenticação. Se algo falhar, nada é gravado.
 - CPF validado pelos dígitos verificadores; chave Pix CPF só pode ser o CPF do titular; até 5 chaves por conta.
 - Número da conta sorteado (6 dígitos + DV módulo 11), como nos bancos reais.
+- **Pix copia e cola** no padrão BR Code do Banco Central (campos EMV + CRC16): um caractere alterado e o código
+  é recusado. Com valor, quem paga não pode mudá-lo. A câmera do celular não lê o QR em `http://IP` (o navegador
+  só libera câmera em HTTPS), então na turma o pagamento é pelo código colado.
+- **Boleto** no padrão Febraban: código de barras de 44 dígitos (banco fictício `999`, fator de vencimento,
+  valor, DV módulo 11) e linha digitável de 47 (DVs módulo 10 que pegam erro de digitação). Vencimento de hoje a
+  1 ano. Depois do vencimento: **multa de 2% + juros de 1% ao mês** por dia de atraso. O status é encapsulado na
+  entidade (só muda por `registrarPagamento()` e `cancelar()`), o boleto é travado no pagamento (dois pagando ao
+  mesmo tempo: o segundo o encontra pago) e ninguém paga o próprio boleto.
 
 ## Como rodar
 
@@ -138,7 +155,7 @@ Requisitos: Docker e JDK 21.
 ```bash
 docker compose up -d          # PostgreSQL em localhost:5433
 cd api && ./mvnw quarkus:dev  # API em http://localhost:8080
-cd api && ./mvnw test         # 30 testes (os de API sobem um Postgres descartável)
+cd api && ./mvnw test         # 51 testes (os de API sobem um Postgres descartável)
 cd web && npm install && npm start   # site em http://localhost:4300
 ```
 
@@ -164,6 +181,21 @@ Em desenvolvimento, a API e o site já escutam na rede (não só no `localhost`)
 O site descobre a API pelo próprio endereço (quem abre `http://IP:4300` usa `http://IP:8080`), e a API aceita (CORS)
 sites abertos pelo `localhost` ou por IPs de rede local. Se a API reiniciar, todos precisam entrar de novo.
 
+## Túnel (colegas em outra rede: outro Wi-Fi, 4G)
+
+Com o [Cloudflare Quick Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/)
+(grátis, sem conta) o site ganha um endereço público `https://xxxx.trycloudflare.com`:
+
+```powershell
+winget install --id Cloudflare.cloudflared -e        # uma vez
+cloudflared tunnel --url http://localhost:4300       # com a API e o site rodando
+```
+
+- O túnel leva só a porta do site; o site fala com a API por `/api`, que o `ng serve` repassa para a porta 8080
+  (`web/proxy.conf.json`). O `ng serve` e a API aceitam apenas endereços `*.trycloudflare.com` além da rede local.
+- Abra o painel do ADM **pelo link do túnel**: o endereço para os colegas e a mensagem da senha provisória saem com ele.
+- O link muda toda vez que o túnel reinicia, e o banco fica acessível pela internet: troque a senha do ADM antes.
+
 ## Site (web/)
 
 Angular 22 + Angular Material, seguindo as instruções da disciplina: só CSS, signals, reactive forms,
@@ -177,7 +209,8 @@ HTML/CSS separados do TypeScript e a estrutura `pages/<funcionalidade>/{model,se
   (extrato por período, chaves Pix, depósito, bloqueio, encerramento), movimentações com comprovante e categorias.
 - **App do cliente** (`/app`): início com saldo (dá para esconder), atalhos e últimas transações; extrato agrupado
   por dia; Pix e transferência na mesma tela de envio em 4 passos (para quem → quanto → confirmar → pronto),
-  mostrando nome e CPF mascarado de quem recebe antes de confirmar; minhas chaves Pix; comprovante; perfil.
-  No celular, as abas ficam embaixo.
+  mostrando nome e CPF mascarado de quem recebe antes de confirmar; minhas chaves Pix; cobrar com QR code
+  (o campo da chave também aceita o código copia e cola); boletos (emitir, ver/imprimir com código de barras
+  desenhado em SVG, pagar e cancelar); comprovante; perfil (no menu do avatar). No celular, as abas ficam embaixo.
 - `common/` tem o que é reaproveitado: sessão e interceptor do token, guardas de rota, validações (CPF, senha, valor),
   marca, rodapé e diálogos.

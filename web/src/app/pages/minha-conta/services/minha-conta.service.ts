@@ -4,8 +4,13 @@ import { Observable } from 'rxjs';
 import { Comprovante } from '../../../common/comprovante/comprovante.model';
 import { API } from '../../../common/config';
 import {
+  Boleto,
   ChavePix,
+  CobrancaPix,
+  CodigoPixLido,
+  ConsultaBoleto,
   Conta,
+  EmissaoBoleto,
   Destinatario,
   EnvioPix,
   MeusDados,
@@ -81,6 +86,45 @@ export class MinhaContaService {
   enviarPix(pix: EnvioPix): Observable<Transacao> {
     return this.http.post<Transacao>(`${this.url}/pix`, pix);
   }
+
+  /** Gera o "Pix copia e cola" para receber numa das minhas chaves. Valor nulo: quem paga escolhe. */
+  cobrarPix(chaveId: number, valor: number | null, descricao: string): Observable<CobrancaPix> {
+    return this.http.post<CobrancaPix>(`${this.url}/pix/cobrancas`, { chaveId, valor, descricao });
+  }
+
+  lerCodigoPix(codigo: string): Observable<CodigoPixLido> {
+    return this.http.post<CodigoPixLido>(`${this.url}/pix/ler-codigo`, { codigo });
+  }
+
+  // ---------- Boletos ----------
+  boletos(): Observable<Boleto[]> {
+    return this.http.get<Boleto[]>(`${this.url}/boletos`);
+  }
+
+  boleto(id: number): Observable<Boleto> {
+    return this.http.get<Boleto>(`${this.url}/boletos/${id}`);
+  }
+
+  emitirBoleto(b: EmissaoBoleto): Observable<Boleto> {
+    return this.http.post<Boleto>(`${this.url}/boletos`, b);
+  }
+
+  cancelarBoleto(id: number): Observable<Boleto> {
+    return this.http.delete<Boleto>(`${this.url}/boletos/${id}`);
+  }
+
+  consultarBoleto(linha: string): Observable<ConsultaBoleto> {
+    return this.http.get<ConsultaBoleto>(`${this.url}/boletos/consulta`, { params: { linha } });
+  }
+
+  pagarBoleto(linha: string): Observable<Transacao> {
+    return this.http.post<Transacao>(`${this.url}/boletos/pagamento`, { linha });
+  }
+}
+
+/** O texto parece um "Pix copia e cola" (e não uma chave)? */
+export function pareceCodigoPix(texto: string): boolean {
+  return texto.trim().startsWith('000201') && texto.trim().length > 40;
 }
 
 function lerPreferencia(): boolean {

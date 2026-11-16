@@ -127,7 +127,7 @@
         </div>
         <div class="corpo-turma">
           @if (turma.url(); as url) {
-            <p>Na mesma rede Wi-Fi, os colegas abrem:</p>
+            <p>{{ url.includes('trycloudflare') ? 'Pelo túnel (de qualquer rede), os colegas abrem:' : 'Na mesma rede Wi-Fi, os colegas abrem:' }}</p>
             <button class="link-turma" (click)="copiarEndereco(url)" matTooltip="Copiar endereço">
               <span class="num">{{ url }}</span>
               <mat-icon>{{ copiado() ? 'check' : 'content_copy' }}</mat-icon>

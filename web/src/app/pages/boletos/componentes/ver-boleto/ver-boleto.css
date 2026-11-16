@@ -1,0 +1,179 @@
+:host {
+  display: block;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.cabeca {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -6px 0 16px -10px;
+}
+
+.cabeca h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+}
+
+.selo {
+  margin-left: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--superficie-3);
+  color: var(--texto-suave);
+}
+
+.selo.pago,
+.selo.aberto {
+  background: var(--verde-suave);
+  color: var(--verde);
+}
+
+.selo.vencido {
+  background: rgb(255 180 80 / 15%);
+  color: #f5b453;
+}
+
+.faixa {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: var(--raio);
+  background: var(--verde-suave);
+  color: var(--texto);
+  font-size: 14px;
+}
+
+.faixa .mat-icon {
+  color: var(--verde);
+  flex: none;
+}
+
+.faixa span {
+  flex: 1;
+}
+
+/* ---------- O papel (sempre claro, como um boleto impresso) ---------- */
+.papel {
+  padding: 18px;
+  border-radius: 12px;
+  background: #fff;
+  color: #111;
+}
+
+.papel.inativo {
+  opacity: 0.55;
+}
+
+.topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #111;
+}
+
+.banco {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.banco img {
+  width: 22px;
+  height: 22px;
+}
+
+.codigo-banco {
+  padding: 0 12px;
+  border-left: 2px solid #111;
+  border-right: 2px solid #111;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.linha {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-weight: 600;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 0 0 14px;
+}
+
+.campos > div {
+  padding: 6px 8px;
+  border-bottom: 1px solid #ccc;
+}
+
+.campos > div:nth-child(odd):not(.largo) {
+  border-right: 1px solid #ccc;
+}
+
+.campos .largo {
+  grid-column: 1 / -1;
+}
+
+.campos dt {
+  font-size: 10.5px;
+  color: #555;
+}
+
+.campos dd {
+  margin: 2px 0 0;
+  font-size: 14px;
+}
+
+.destaque {
+  font-weight: 700;
+}
+
+.aviso-ficticio {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 10.5px;
+  color: #777;
+}
+
+.botoes {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.botoes > * {
+  height: 46px;
+}
+
+.perigo {
+  color: var(--mat-sys-error);
+}
+
+/* No celular a linha digitável vai para a linha de baixo, inteira. */
+@media (max-width: 599px) {
+  .linha {
+    flex-basis: 100%;
+    text-align: left;
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 600px) {
+  .botoes {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}

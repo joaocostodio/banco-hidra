@@ -64,6 +64,19 @@ public class Usuario extends PanacheEntity {
         desbloquearAcesso();
     }
 
+    /**
+     * Senha do administrador inicial, vinda da configuração do servidor. Não passa pela regra de
+     * senha forte: quem escolhe é o dono do servidor (o painel avisa enquanto ela for a padrão).
+     */
+    public void definirSenhaDoServidor(String senha) {
+        if (senha == null || senha.isBlank()) {
+            throw new IllegalStateException("Configure a senha do administrador (banco.admin.senha)");
+        }
+        senhaHash = BCrypt.hashpw(senha, BCrypt.gensalt());
+        trocarSenha = false;
+        desbloquearAcesso();
+    }
+
     /** Senha gerada pelo banco: funciona para entrar, mas obriga a troca no primeiro acesso. */
     public void definirSenhaProvisoria(String senhaProvisoria) {
         senhaHash = BCrypt.hashpw(senhaProvisoria, BCrypt.gensalt());
