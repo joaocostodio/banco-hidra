@@ -9,14 +9,17 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
 import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ComprovanteDialog } from '../../../../common/comprovante/comprovante';
 import { mensagemDeErro } from '../../../../common/erros';
+import { valorOu } from '../../../../common/recursos';
 import { IniciaisPipe } from '../../../../common/formatos';
 import { lerValor, somenteDigitos, valorValidator } from '../../../../common/validadores';
 import { Destinatario, Transacao } from '../../../minha-conta/model/minha-conta.model';
 import { MinhaContaService, pareceCodigoPix, ultimosDias } from '../../../minha-conta/services/minha-conta.service';
+import { IconeContaPipe } from '../../../financas/services/financas';
 import { NOME_TIPO_CHAVE } from '../../services/chaves';
 
 export type ModoEnvio = 'pix' | 'transferencia';
@@ -47,9 +50,11 @@ function formatarNumeroConta(texto: string): string {
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
+    MatSelectModule,
     CurrencyPipe,
     DatePipe,
     IniciaisPipe,
+    IconeContaPipe,
   ],
   templateUrl: './enviar.html',
   styleUrl: './enviar.css',
@@ -64,6 +69,8 @@ export class Enviar implements OnInit {
   /** ?chave= (Pix) ou ?conta= (transferência) já preenchidos. */
   readonly chave = input<string>();
   readonly conta = input<string>();
+  /** ?de=id: de qual das minhas contas sai a transferência. */
+  readonly de = input<string>();
 
   protected readonly passo = signal<Passo>('destino');
   protected readonly ocupado = signal(false);
@@ -73,7 +80,23 @@ export class Enviar implements OnInit {
   /** Veio de um "Pix copia e cola" com valor: não dá para mudar o valor. */
   protected readonly valorFixo = signal(false);
 
+  /** Conta principal: o Pix sempre sai dela. */
   protected readonly minha = rxResource({ stream: () => this.minhaConta.conta() });
+
+  /** Minhas contas: a transferência pode sair de qualquer uma e ir para outra delas. */
+  private readonly minhasContas = rxResource({ stream: () => this.minhaConta.contas() });
+  protected readonly ativas = computed(() => valorOu(this.minhasContas, []).filter((c) => c.status === 'ATIVA'));
+  protected readonly origemId = signal<number | null>(null);
+  protected readonly origem = computed(
+    () => this.ativas().find((c) => c.id === this.origemId()) ?? this.ativas().find((c) => c.principal) ?? null,
+  );
+  /** Para onde dá para mandar entre as minhas contas (todas menos a de origem). */
+  protected readonly destinosProprios = computed(() => this.ativas().filter((c) => c.id !== this.origem()?.id));
+  /** Saldo de onde o dinheiro sai: a principal no Pix, a escolhida na transferência. */
+  protected readonly saldoOrigem = computed(() =>
+    this.modo() === 'pix' ? valorOu(this.minha, null)?.saldo : this.origem()?.saldo,
+  );
+
   private readonly historico = rxResource({
     params: () => (this.modo() === 'transferencia' ? ultimosDias(90) : undefined),
     stream: ({ params }) => this.minhaConta.extrato(params),
@@ -106,7 +129,7 @@ export class Enviar implements OnInit {
     const v = lerValor(this.valorDigitado());
     return Number.isNaN(v) ? 0 : v;
   });
-  protected readonly saldoDepois = computed(() => (this.minha.value()?.saldo ?? 0) - this.valor());
+  protected readonly saldoDepois = computed(() => (this.saldoOrigem() ?? 0) - this.valor());
 
   protected readonly ehPix = computed(() => this.modo() === 'pix');
   protected readonly titulo = computed(() => (this.ehPix() ? 'Enviar Pix' : 'Transferir'));
@@ -127,6 +150,15 @@ export class Enviar implements OnInit {
     if (this.conta()) {
       this.destinoConta.controls.numero.setValue(formatarNumeroConta(this.conta()!));
     }
+    if (Number(this.de()) > 0) {
+      this.origemId.set(Number(this.de()));
+    }
+  }
+
+  /** Transferência entre as minhas contas: já preenche agência e número da conta escolhida. */
+  protected usarMinhaConta(agencia: string, numero: string): void {
+    this.destinoConta.setValue({ agencia, numero });
+    this.buscarDestino();
   }
 
   // ---------- Passo 1: para quem ----------
@@ -159,8 +191,12 @@ export class Enviar implements OnInit {
     busca.subscribe({
       next: (d) => {
         this.ocupado.set(false);
-        if (d.conta === this.minha.value()?.numero) {
-          this.erro.set(this.ehPix() ? 'Essa chave é sua. Escolha a chave de outra pessoa.' : 'Essa é a sua própria conta.');
+        if (this.ehPix() && d.conta === this.minha.value()?.numero) {
+          this.erro.set('Essa chave é sua. Escolha a chave de outra pessoa.');
+          return;
+        }
+        if (!this.ehPix() && d.conta === this.origem()?.numero) {
+          this.erro.set('O destino é a mesma conta de onde o dinheiro sai. Escolha outra conta.');
           return;
         }
         this.destinatario.set(d);
@@ -233,7 +269,7 @@ export class Enviar implements OnInit {
     const descricao = this.valores.controls.descricao.value.trim();
     const envio: Observable<Transacao> = this.ehPix()
       ? this.minhaConta.enviarPix({ chave: this.destinoPix.controls.chave.value.trim(), valor, descricao })
-      : this.minhaConta.transferir({ agencia: d.agencia, numero: d.conta, valor, descricao });
+      : this.minhaConta.transferir({ contaOrigemId: this.origem()?.id, agencia: d.agencia, numero: d.conta, valor, descricao });
 
     this.ocupado.set(true);
     this.erro.set('');
@@ -290,7 +326,8 @@ export class Enviar implements OnInit {
   }
 
   private cabeNoSaldo(c: AbstractControl): ValidationErrors | null {
-    const saldo = this.minha?.value()?.saldo;
+    // Roda na criação do formulário, antes dos campos da classe existirem: daí o "?.".
+    const saldo = this.saldoOrigem?.();
     const v = lerValor(c.value);
     if (saldo === undefined || Number.isNaN(v)) {
       return null;

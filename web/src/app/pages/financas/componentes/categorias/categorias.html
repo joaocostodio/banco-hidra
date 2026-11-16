@@ -1,0 +1,62 @@
+<header class="cabeca">
+  <a matIconButton routerLink="/app/extrato" aria-label="Voltar"><mat-icon>arrow_back</mat-icon></a>
+  <h1>Categorias</h1>
+</header>
+
+@if (erro()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+}
+@if (categorias.isLoading() && !categorias.hasValue()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+<section class="cartao">
+  <div class="cartao-cab"><h3>Minhas categorias</h3></div>
+
+  <form class="nova" [formGroup]="form" (ngSubmit)="criar()" novalidate>
+    <mat-form-field subscriptSizing="dynamic">
+      <mat-label>Nova categoria</mat-label>
+      <input matInput formControlName="nova" maxlength="60" placeholder="Ex.: Academia, Pet, Presentes" autocomplete="off" />
+      <mat-error>Digite um nome (até 60 caracteres)</mat-error>
+    </mat-form-field>
+    <button matButton="filled" type="submit" [disabled]="salvando()"><mat-icon>add</mat-icon>Criar</button>
+  </form>
+
+  @if (minhas().length === 0 && categorias.hasValue()) {
+    <div class="vazio">
+      <mat-icon>sell</mat-icon>
+      Você ainda não criou categorias. As padrão já servem para começar.
+    </div>
+  } @else {
+    <ul>
+      @for (c of minhas(); track c.id) {
+        <li>
+          <span class="ico-tx entrada"><mat-icon>sell</mat-icon></span>
+          @if (editando() === c.id) {
+            <mat-form-field class="renomear" subscriptSizing="dynamic">
+              <input matInput [formControl]="nomeEditado" maxlength="60" aria-label="Novo nome"
+                     (keydown.enter)="salvarNome(c)" (keydown.escape)="editando.set(null)" />
+            </mat-form-field>
+            <button matIconButton (click)="salvarNome(c)" aria-label="Salvar nome" matTooltip="Salvar"><mat-icon>check</mat-icon></button>
+          } @else {
+            <span class="texto">{{ c.descricao }}</span>
+            <button matIconButton (click)="editar(c)" aria-label="Renomear" matTooltip="Renomear"><mat-icon>edit</mat-icon></button>
+            <button matIconButton (click)="excluir(c)" aria-label="Excluir" matTooltip="Excluir"><mat-icon>delete</mat-icon></button>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+<section class="cartao">
+  <div class="cartao-cab"><h3>Padrão do banco</h3></div>
+  <ul class="padrao">
+    @for (c of padrao(); track c.id) {
+      <li>
+        <span class="ico-tx"><app-icone [nome]="c.descricao | iconeCategoria" /></span>
+        <span class="texto">{{ c.descricao }}</span>
+      </li>
+    }
+  </ul>
+</section>

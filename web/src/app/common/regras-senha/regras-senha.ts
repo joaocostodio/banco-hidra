@@ -13,15 +13,20 @@ export class RegrasSenha {
   readonly senha = input('');
   /** Senha que a nova não pode repetir (a atual/provisória). */
   readonly anterior = input('');
+  /** No cadastro não existe senha atual: a regra "diferente da atual" não aparece. */
+  readonly compararComAtual = input(true);
 
   protected readonly regras = computed(() => {
     const r = regrasDaSenha(this.senha());
-    return [
+    const regras = [
       { ok: r.tamanho, texto: 'Pelo menos 8 caracteres' },
       { ok: r.letras, texto: 'Tem letras' },
       { ok: r.numeros, texto: 'Tem números' },
-      { ok: !!this.senha() && this.senha() !== this.anterior(), texto: 'Diferente da senha atual' },
     ];
+    if (this.compararComAtual()) {
+      regras.push({ ok: !!this.senha() && this.senha() !== this.anterior(), texto: 'Diferente da senha atual' });
+    }
+    return regras;
   });
 
   /** 0 a 4 tracinhos: as 3 regras obrigatórias + bônus por tamanho e variedade. */

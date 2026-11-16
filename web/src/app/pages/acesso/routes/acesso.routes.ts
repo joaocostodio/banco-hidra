@@ -9,6 +9,12 @@ export const ACESSO_ROUTES: Routes = [
     loadComponent: () => import('../componentes/entrar/entrar').then((m) => m.Entrar),
   },
   {
+    path: 'criar-conta',
+    title: 'Criar conta',
+    canActivate: [visitanteGuard],
+    loadComponent: () => import('../componentes/criar-conta/criar-conta').then((m) => m.CriarConta),
+  },
+  {
     path: 'primeiro-acesso',
     title: 'Primeiro acesso',
     canActivate: [primeiroAcessoGuard],

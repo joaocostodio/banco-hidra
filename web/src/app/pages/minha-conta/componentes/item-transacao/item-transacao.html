@@ -5,7 +5,12 @@
   </span>
   <span class="texto">
     <b>{{ t | tituloTransacao }}</b>
-    <small>{{ t | detalheTransacao }}</small>
+    <small>
+      @if (mostrarConta() && t.contaNome) {
+        <span class="conta">{{ t.contaNome }}</span>
+      }
+      {{ t | detalheTransacao }}
+    </small>
   </span>
   <span class="lado">
     <span class="valor num" [class.entrada]="t.tipo === 'ENTRADA'">

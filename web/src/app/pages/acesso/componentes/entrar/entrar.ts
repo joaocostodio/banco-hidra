@@ -5,7 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../common/auth/auth.service';
 import { mensagemDeErro } from '../../../../common/erros';
 import { Vitrine } from '../vitrine/vitrine';
@@ -14,6 +14,7 @@ import { Vitrine } from '../vitrine/vitrine';
 @Component({
   selector: 'app-entrar',
   imports: [
+    RouterLink,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,

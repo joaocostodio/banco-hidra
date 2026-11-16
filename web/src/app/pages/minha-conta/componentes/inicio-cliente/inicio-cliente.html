@@ -12,9 +12,10 @@
   <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
 }
 
+<!-- Saldo geral (todas as contas abertas) -->
 <section class="saldo">
   <div class="rot">
-    Saldo disponível
+    Saldo geral
     <button
       matIconButton
       (click)="minhaConta.alternarSaldo()"
@@ -24,51 +25,116 @@
       <mat-icon>{{ minhaConta.saldoOculto() ? 'visibility_off' : 'visibility' }}</mat-icon>
     </button>
   </div>
-  @if (conta.value(); as c) {
+  @if (dados(); as r) {
     <div class="valor num">
       @if (minhaConta.saldoOculto()) {
         R$ ••••••
       } @else {
-        {{ c.saldo | currency: 'BRL' }}
+        {{ r.saldoTotal | currency: 'BRL' }}
       }
     </div>
-    <button class="dados-conta" (click)="copiarConta(c.agencia, c.numero)" matTooltip="Copiar agência e conta">
-      <span class="num">Ag {{ c.agencia }} · CC {{ c.numero }}</span>
-      <mat-icon>content_copy</mat-icon>
-    </button>
+    <a class="dados-conta" routerLink="/app/contas">
+      <span>em {{ r.contas.length }} {{ r.contas.length === 1 ? 'conta' : 'contas' }}</span>
+      <mat-icon>chevron_right</mat-icon>
+    </a>
   } @else {
     <div class="valor carregando"></div>
     <mat-progress-bar mode="indeterminate" />
   }
 </section>
 
-@if (conta.value()?.status === 'BLOQUEADA') {
+@for (c of bloqueadas(); track c.id) {
   <div class="aviso">
     <mat-icon>lock</mat-icon>
-    <span>Sua conta está <b>bloqueada</b>: não dá para enviar nem receber dinheiro. Fale com o banco.</span>
+    <span>A conta <b>{{ c.nome }}</b> está <b>bloqueada</b>: não envia nem recebe dinheiro. Fale com o banco.</span>
   </div>
 }
 
 <nav class="atalhos" aria-label="Atalhos">
-  <a routerLink="/app/pix/enviar">
-    <span class="bola"><mat-icon svgIcon="pix" /></span>
-    Pix
+  <a routerLink="/app/lancar" [queryParams]="{ tipo: 'RECEITA' }">
+    <span class="bola"><mat-icon>add_circle</mat-icon></span>
+    Receita
+  </a>
+  <a routerLink="/app/lancar" [queryParams]="{ tipo: 'DESPESA' }">
+    <span class="bola despesa"><mat-icon>remove_circle</mat-icon></span>
+    Despesa
   </a>
   <a routerLink="/app/transferir">
     <span class="bola"><mat-icon>swap_horiz</mat-icon></span>
     Transferir
   </a>
-  <a routerLink="/app/pix/cobrar">
-    <span class="bola"><mat-icon>qr_code_2</mat-icon></span>
-    Cobrar
-  </a>
-  <a routerLink="/app/boletos/pagar">
-    <span class="bola"><mat-icon>barcode_reader</mat-icon></span>
-    Pagar boleto
+  <a routerLink="/app/pix/enviar">
+    <span class="bola"><mat-icon svgIcon="pix" /></span>
+    Pix
   </a>
 </nav>
 
-@if (chaves.value()?.length === 0) {
+<!-- Saldo por conta -->
+@if (dados(); as r) {
+  <section class="contas" aria-label="Saldo por conta">
+    @for (c of r.contas; track c.id) {
+      <a class="conta" routerLink="/app/extrato" [queryParams]="{ conta: c.id }">
+        <mat-icon>{{ c.tipo | iconeConta }}</mat-icon>
+        <small>{{ c.nome }}</small>
+        <b class="num">{{ minhaConta.saldoOculto() ? '••••' : (c.saldo | currency: 'BRL') }}</b>
+      </a>
+    }
+    <a class="conta nova" routerLink="/app/contas">
+      <mat-icon>add</mat-icon>
+      <small>Nova conta</small>
+    </a>
+  </section>
+
+  <!-- O mês: receitas × despesas -->
+  <section class="cartao mes">
+    <div class="cartao-cab">
+      <h3>Este mês</h3>
+      <span class="espaco"></span>
+      <a matButton routerLink="/app/extrato">Ver transações</a>
+    </div>
+    <div class="numeros">
+      <div>
+        <small>Receitas</small>
+        <b class="num entrada">{{ minhaConta.saldoOculto() ? '••••' : (r.receitasMes | currency: 'BRL') }}</b>
+      </div>
+      <div>
+        <small>Despesas</small>
+        <b class="num saida">{{ minhaConta.saldoOculto() ? '••••' : (r.despesasMes | currency: 'BRL') }}</b>
+      </div>
+      <div>
+        <small>Resultado</small>
+        <b class="num" [class.entrada]="resultadoMes() >= 0" [class.saida]="resultadoMes() < 0">
+          {{ minhaConta.saldoOculto() ? '••••' : (resultadoMes() | currency: 'BRL') }}
+        </b>
+      </div>
+    </div>
+
+    @if (gastos().length) {
+      <h4>Para onde foi o dinheiro</h4>
+      <ul class="gastos">
+        @for (g of gastos(); track g.categoriaId) {
+          <li>
+            <a routerLink="/app/extrato" [queryParams]="{ categoria: g.categoriaId, tipo: 'SAIDA' }">
+              <span class="ico-tx"><app-icone [nome]="g.categoria | iconeCategoria" /></span>
+              <span class="nome">
+                <span>{{ g.categoria }}</span>
+                <span class="barra"><span [style.width.%]="g.fracao * 100"></span></span>
+              </span>
+              <span class="lado">
+                <b class="num">{{ minhaConta.saldoOculto() ? '••••' : (g.total | currency: 'BRL') }}</b>
+                <small>{{ g.fracao | percent }}</small>
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="muted vazio-mes">Nenhuma despesa lançada este mês.</p>
+    }
+  </section>
+}
+
+@if (semChave()) {
   <a class="convite" routerLink="/app/pix" [queryParams]="{ nova: 1 }">
     <span class="ico-tx entrada"><mat-icon svgIcon="pix" /></span>
     <span>
@@ -83,16 +149,16 @@
   <div class="cartao-cab">
     <h3>Últimas transações</h3>
     <span class="espaco"></span>
-    <a matButton routerLink="/app/extrato">Ver extrato</a>
+    <a matButton routerLink="/app/extrato">Ver todas</a>
   </div>
-  @if (recentes.isLoading() && !recentes.value()) {
+  @if (recentes.isLoading() && !recentes.hasValue()) {
     <mat-progress-bar mode="indeterminate" />
   }
-  @if (recentes.value()) {
+  @if (recentes.hasValue()) {
     @if (ultimas().length === 0) {
       <div class="vazio">
         <mat-icon>receipt_long</mat-icon>
-        Nenhuma transação ainda.
+        Nenhuma transação nos últimos 30 dias. Comece lançando uma receita.
       </div>
     } @else {
       <div class="itens">

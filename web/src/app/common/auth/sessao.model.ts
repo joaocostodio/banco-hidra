@@ -7,11 +7,22 @@ export interface Usuario {
   perfil: Perfil;
 }
 
-/** Resposta do POST /auth/login e do PUT /auth/senha. */
+/**
+ * Resposta do login, do cadastro e da troca de senha. O token JWT NÃO vem aqui: ele fica num cookie
+ * httpOnly, que o navegador manda sozinho e que o JavaScript não consegue ler.
+ */
 export interface LoginResposta {
-  token: string;
+  /** Quando a sessão acaba (para o site saber, sem precisar ler o token). */
   expiraEm: string;
-  /** true: o token só serve para trocar a senha (primeiro acesso). */
+  /** true: a sessão só serve para trocar a senha (primeiro acesso). */
   trocarSenha: boolean;
   usuario: Usuario;
+}
+
+/** "Criar conta". */
+export interface Cadastro {
+  nome: string;
+  cpf: string;
+  email: string;
+  senha: string;
 }

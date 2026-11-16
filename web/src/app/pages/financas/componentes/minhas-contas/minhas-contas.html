@@ -1,0 +1,85 @@
+<div class="cabeca">
+  <h1>Minhas contas</h1>
+  <span class="espaco"></span>
+  <button matButton="filled" (click)="abrir()" [disabled]="cheio() || !contas.hasValue()">
+    <mat-icon>add</mat-icon>
+    Nova conta
+  </button>
+</div>
+
+@if (erro()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+}
+@if (contas.isLoading() && !contas.hasValue()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (contas.hasValue()) {
+  <section class="total cartao">
+    <small>Saldo de todas as contas</small>
+    <b class="num">{{ minhaConta.saldoOculto() ? 'R$ ••••••' : (total() | currency: 'BRL') }}</b>
+    <div class="acoes">
+      <a matButton="tonal" routerLink="/app/lancar" [queryParams]="{ tipo: 'RECEITA' }"><mat-icon>add</mat-icon>Receita</a>
+      <a matButton="tonal" routerLink="/app/lancar" [queryParams]="{ tipo: 'DESPESA' }"><mat-icon>remove</mat-icon>Despesa</a>
+      <a matButton="tonal" routerLink="/app/transferir" [queryParams]="{ entre: 1 }"><mat-icon>swap_horiz</mat-icon>Transferir</a>
+    </div>
+  </section>
+
+  <ul class="lista">
+    @for (c of abertas(); track c.id) {
+      <li class="cartao conta">
+        <span class="bola"><mat-icon>{{ c.tipo | iconeConta }}</mat-icon></span>
+        <a class="texto" routerLink="/app/extrato" [queryParams]="{ conta: c.id }" [attr.aria-label]="'Ver transações de ' + c.nome">
+          <b>
+            {{ c.nome }}
+            @if (c.principal) {
+              <span class="selo">principal</span>
+            }
+            @if (c.status === 'BLOQUEADA') {
+              <span class="selo bloqueada">bloqueada</span>
+            }
+          </b>
+          <small class="num">{{ c.tipo | nomeTipoConta }} · Ag {{ c.agencia }} · CC {{ c.numero }}</small>
+        </a>
+        <b class="saldo num">{{ minhaConta.saldoOculto() ? '••••' : (c.saldo | currency: 'BRL') }}</b>
+        <button matIconButton [matMenuTriggerFor]="menu" [attr.aria-label]="'Opções de ' + c.nome">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu" xPosition="before">
+          <a mat-menu-item routerLink="/app/extrato" [queryParams]="{ conta: c.id }"><mat-icon>receipt_long</mat-icon>Transações</a>
+          <a mat-menu-item routerLink="/app/lancar" [queryParams]="{ tipo: 'RECEITA', conta: c.id }"><mat-icon>add</mat-icon>Lançar receita</a>
+          <a mat-menu-item routerLink="/app/lancar" [queryParams]="{ tipo: 'DESPESA', conta: c.id }"><mat-icon>remove</mat-icon>Lançar despesa</a>
+          <a mat-menu-item routerLink="/app/transferir" [queryParams]="{ entre: 1, de: c.id }"><mat-icon>swap_horiz</mat-icon>Transferir</a>
+          <button mat-menu-item (click)="abrir(c)"><mat-icon>edit</mat-icon>Renomear</button>
+          @if (!c.principal) {
+            <button mat-menu-item (click)="encerrar(c)"><mat-icon>block</mat-icon>Encerrar</button>
+          }
+        </mat-menu>
+      </li>
+    }
+  </ul>
+
+  @if (cheio()) {
+    <p class="dica"><mat-icon>info</mat-icon>Você chegou ao limite de contas abertas. Encerre uma para abrir outra.</p>
+  } @else if (abertas().length === 1) {
+    <p class="dica">
+      <mat-icon>lightbulb</mat-icon>
+      Separe seu dinheiro: abra uma poupança para a reserva de emergência ou uma carteira para o dinheiro em espécie.
+    </p>
+  }
+
+  @if (encerradas().length) {
+    <h3 class="sub">Encerradas</h3>
+    <ul class="lista">
+      @for (c of encerradas(); track c.id) {
+        <li class="cartao conta encerrada">
+          <span class="bola"><mat-icon>{{ c.tipo | iconeConta }}</mat-icon></span>
+          <a class="texto" routerLink="/app/extrato" [queryParams]="{ conta: c.id }">
+            <b>{{ c.nome }}</b>
+            <small class="num">{{ c.tipo | nomeTipoConta }} · CC {{ c.numero }} · encerrada</small>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+}

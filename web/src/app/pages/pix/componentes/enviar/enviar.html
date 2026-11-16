@@ -39,6 +39,33 @@
         Não tem a chave? <a routerLink="/app/transferir">Transfira com agência e conta</a>
       </p>
     } @else {
+      @if (ativas().length > 1) {
+        <mat-form-field class="origem">
+          <mat-label>Sai da conta</mat-label>
+          <mat-select [value]="origem()?.id" (selectionChange)="origemId.set($event.value)">
+            @for (c of ativas(); track c.id) {
+              <mat-option [value]="c.id">{{ c.nome }} · {{ c.saldo | currency: 'BRL' }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      @if (destinosProprios().length > 0) {
+        <h3 class="sub primeira">Entre minhas contas</h3>
+        <div class="contatos">
+          @for (c of destinosProprios(); track c.id) {
+            <button class="contato" (click)="usarMinhaConta(c.agencia, c.numero)" [disabled]="ocupado()">
+              <span class="avatar"><mat-icon>{{ c.tipo | iconeConta }}</mat-icon></span>
+              <span>
+                <b>{{ c.nome }}</b>
+                <small class="num">{{ c.agencia }} / {{ c.numero }} · {{ c.saldo | currency: 'BRL' }}</small>
+              </span>
+            </button>
+          }
+        </div>
+        <h3 class="sub">Para outra pessoa</h3>
+      }
+
       <form [formGroup]="destinoConta" (ngSubmit)="buscarDestino()" novalidate>
         <div class="banco"><img src="hidra.svg" alt="" />Banco Hidra</div>
         <div class="linha-conta">
@@ -111,8 +138,8 @@
         } @else {
           <mat-error>Digite o valor</mat-error>
         }
-        @if (minha.value(); as c) {
-          <mat-hint>Saldo disponível: {{ c.saldo | currency: 'BRL' }}</mat-hint>
+        @if (saldoOrigem() !== undefined) {
+          <mat-hint>Saldo disponível{{ ehPix() ? '' : ' em ' + origem()?.nome }}: {{ saldoOrigem() | currency: 'BRL' }}</mat-hint>
         }
       </mat-form-field>
 
@@ -136,6 +163,10 @@
       </div>
 
       <dl class="cartao detalhes">
+        @if (!ehPix() && origem(); as o) {
+          <dt>De</dt>
+          <dd>{{ o.nome }}</dd>
+        }
         <dt>Para</dt>
         <dd><b>{{ d.nome }}</b></dd>
         <dt>CPF</dt>

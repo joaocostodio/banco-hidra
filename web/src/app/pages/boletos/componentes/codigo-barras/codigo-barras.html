@@ -1,0 +1,11 @@
+<svg
+  [attr.viewBox]="'0 0 ' + desenho().largura + ' ' + altura"
+  preserveAspectRatio="none"
+  role="img"
+  [attr.aria-label]="'Código de barras ' + codigo()"
+>
+  <rect [attr.width]="desenho().largura" [attr.height]="altura" fill="#fff" />
+  @for (b of desenho().barras; track $index) {
+    <rect [attr.x]="b.x" [attr.width]="b.w" [attr.height]="altura" fill="#000" />
+  }
+</svg>

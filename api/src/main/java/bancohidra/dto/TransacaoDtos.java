@@ -16,15 +16,23 @@ public final class TransacaoDtos {
     private TransacaoDtos() {
     }
 
+    /**
+     * Uma linha do extrato. {@code interna}: transferência entre duas contas do mesmo cliente; só nesse caso
+     * vem o nome da outra conta ({@code contraparteContaNome}), porque o nome que alguém dá às próprias contas
+     * ("Reserva para cirurgia") não deve aparecer para outras pessoas.
+     */
     public record TransacaoResponse(Long id, Long contaId, String contaNumero, String contaNome, TipoTransacao tipo,
                                     BigDecimal valor, BigDecimal saldoApos, String descricao, Long categoriaId,
                                     String categoria, String contraparteNome, String contraparteConta,
+                                    boolean interna, String contraparteContaNome,
                                     UUID autenticacao, LocalDateTime dataHora) {
         public static TransacaoResponse de(Transacao t) {
+            boolean interna = t.contraparte != null && t.contraparte.titular.id.equals(t.conta.titular.id);
             return new TransacaoResponse(t.id, t.conta.id, t.conta.numero, t.conta.nome, t.tipo, t.valor,
                     t.saldoApos, t.descricao, t.categoria.id, t.categoria.descricao,
                     t.contraparte == null ? null : t.contraparte.titular.nome,
                     t.contraparte == null ? null : t.contraparte.numero,
+                    interna, interna ? t.contraparte.nome : null,
                     t.autenticacao, t.dataHora);
         }
     }

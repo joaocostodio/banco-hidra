@@ -8,7 +8,7 @@ export const MINHA_CONTA_ROUTES: Routes = [
   },
   {
     path: 'extrato',
-    title: 'Extrato',
+    title: 'Transações',
     loadComponent: () => import('../componentes/extrato/extrato').then((m) => m.Extrato),
   },
   {

@@ -1,0 +1,144 @@
+:host {
+  display: block;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.cabeca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 650;
+}
+
+.total {
+  display: grid;
+  gap: 4px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  background:
+    linear-gradient(140deg, rgb(61 220 151 / 14%), transparent 70%),
+    var(--superficie);
+}
+
+.total small {
+  color: var(--texto-suave);
+}
+
+.total > b {
+  font-size: 30px;
+  font-weight: 650;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.lista {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.conta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 8px 12px 16px;
+}
+
+.conta.encerrada {
+  opacity: 0.6;
+}
+
+.bola {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: var(--verde-suave);
+  color: var(--verde);
+}
+
+.texto {
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.texto b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.texto small {
+  color: var(--texto-suave);
+  font-size: 12px;
+}
+
+.saldo {
+  white-space: nowrap;
+}
+
+.selo {
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  background: var(--verde-suave);
+  color: var(--verde);
+}
+
+.selo.bloqueada {
+  background: rgb(255 180 80 / 15%);
+  color: #f5b453;
+}
+
+.sub {
+  margin: 24px 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.dica {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 16px 4px;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.dica .mat-icon {
+  flex: none;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: var(--prata);
+}
+
+@media (max-width: 480px) {
+  .acoes > * {
+    flex: 1;
+  }
+}

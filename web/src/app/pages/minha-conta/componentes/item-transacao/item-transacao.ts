@@ -21,5 +21,7 @@ export class ItemTransacao {
   readonly oculto = input(false);
   /** Mostra a data (início) ou só a hora (extrato, que já agrupa por dia). */
   readonly formatoData = input<'data' | 'hora'>('data');
+  /** Mostra de qual conta é (quando a lista junta várias contas). */
+  readonly mostrarConta = input(false);
   readonly abrir = output<Transacao>();
 }

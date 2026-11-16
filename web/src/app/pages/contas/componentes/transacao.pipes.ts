@@ -4,6 +4,9 @@ import { Transacao } from '../model/conta.model';
 /** "Pix recebido", "Transferência enviada", "Depósito"... */
 export function tituloDaTransacao(t: Transacao): string {
   const entrada = t.tipo === 'ENTRADA';
+  if (t.interna) {
+    return 'Entre minhas contas';
+  }
   switch (t.categoria) {
     case 'Pix':
       return entrada ? 'Pix recebido' : 'Pix enviado';
@@ -17,8 +20,10 @@ export function tituloDaTransacao(t: Transacao): string {
 /** Segunda linha: com quem foi e a mensagem, quando houver. */
 export function detalheDaTransacao(t: Transacao): string {
   const partes: string[] = [];
-  if (t.contraparteNome) {
-    partes.push((t.tipo === 'ENTRADA' ? 'de ' : 'para ') + t.contraparteNome);
+  // Entre as próprias contas, o que interessa é a outra conta (o titular é a própria pessoa).
+  const outro = t.interna && t.contraparteContaNome ? t.contraparteContaNome : t.contraparteNome;
+  if (outro) {
+    partes.push((t.tipo === 'ENTRADA' ? 'de ' : 'para ') + outro);
   }
   const descricao = t.descricao?.trim();
   if (descricao && descricao !== t.categoria && !descricao.startsWith(t.categoria)) {

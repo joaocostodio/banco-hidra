@@ -275,3 +275,12 @@ mat-progress-bar {
     animation: none;
   }
 }
+
+/* ---------- Transferência: de qual conta e entre as minhas contas ---------- */
+.origem {
+  width: 100%;
+}
+
+.sub.primeira {
+  margin-top: 4px;
+}

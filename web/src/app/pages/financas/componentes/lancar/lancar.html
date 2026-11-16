@@ -1,0 +1,70 @@
+<header class="cabeca">
+  <a matIconButton routerLink="/app" aria-label="Voltar"><mat-icon>arrow_back</mat-icon></a>
+  <h1>Novo lançamento</h1>
+</header>
+
+@if (erro() || erroCarga()) {
+  <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() || erroCarga() }}</div>
+}
+@if ((contas.isLoading() && !contas.hasValue()) || (categorias.isLoading() && !categorias.hasValue())) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+<form [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+  <mat-button-toggle-group formControlName="tipo" class="tipo" hideSingleSelectionIndicator aria-label="Tipo de lançamento">
+    <mat-button-toggle value="DESPESA" class="despesa"><mat-icon>remove</mat-icon>Despesa</mat-button-toggle>
+    <mat-button-toggle value="RECEITA" class="receita"><mat-icon>add</mat-icon>Receita</mat-button-toggle>
+  </mat-button-toggle-group>
+
+  <mat-form-field class="campo-valor">
+    <mat-label>Valor</mat-label>
+    <span matTextPrefix>R$&nbsp;</span>
+    <input matInput class="num" formControlName="valor" inputmode="decimal" placeholder="0,00" autocomplete="off" />
+    @if (form.controls.valor.hasError('valor')) {
+      <mat-error>{{ form.controls.valor.getError('valor') }}</mat-error>
+    } @else {
+      <mat-error>Digite o valor</mat-error>
+    }
+    @if (!ehReceita() && saldoDaConta() !== null) {
+      <mat-hint>Saldo da conta: {{ saldoDaConta() | currency: 'BRL' }}</mat-hint>
+    }
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>{{ ehReceita() ? 'Entra na conta' : 'Sai da conta' }}</mat-label>
+    <mat-select formControlName="contaId">
+      @for (c of contasAtivas(); track c.id) {
+        <mat-option [value]="c.id">
+          <mat-icon>{{ c.tipo | iconeConta }}</mat-icon>{{ c.nome }} · {{ c.saldo | currency: 'BRL' }}
+        </mat-option>
+      }
+    </mat-select>
+    <mat-error>Escolha a conta</mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Categoria</mat-label>
+    <mat-select formControlName="categoriaId">
+      @for (c of categoriasLancaveis(); track c.id) {
+        <mat-option [value]="c.id">{{ c.descricao }}@if (c.propria) {<small class="muted"> · minha</small>}</mat-option>
+      }
+    </mat-select>
+    <mat-hint><a routerLink="/app/categorias">Criar minhas categorias</a></mat-hint>
+    <mat-error>Escolha a categoria</mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Descrição (opcional)</mat-label>
+    <input matInput formControlName="descricao" maxlength="200" autocomplete="off"
+           [placeholder]="ehReceita() ? 'Ex.: Salário de novembro' : 'Ex.: Mercado do mês'" />
+    <mat-hint align="end">{{ form.controls.descricao.value.length }}/200</mat-hint>
+  </mat-form-field>
+
+  <button matButton="filled" class="largo" type="submit" [disabled]="salvando()">
+    <mat-icon>check</mat-icon>
+    {{ ehReceita() ? 'Lançar receita' : 'Lançar despesa' }}
+  </button>
+  @if (salvando()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+</form>

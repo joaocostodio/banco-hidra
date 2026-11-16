@@ -1,0 +1,70 @@
+:host {
+  display: grid;
+  gap: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.cabeca {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -6px 0 0 -10px;
+}
+
+.cabeca h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+}
+
+.nova {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 4px 18px 12px;
+}
+
+.nova mat-form-field {
+  flex: 1;
+}
+
+.nova button {
+  height: 56px;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+
+li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 4px 8px 4px 18px;
+}
+
+li + li {
+  border-top: 1px solid var(--borda);
+}
+
+.texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.renomear {
+  flex: 1;
+}
+
+.padrao {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.padrao li + li {
+  border-top: none;
+}

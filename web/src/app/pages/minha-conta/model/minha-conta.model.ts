@@ -2,6 +2,71 @@ import { StatusConta, TipoChavePix } from '../../contas/model/conta.model';
 
 export type { ChavePix, Conta, Periodo, TipoChavePix, Transacao } from '../../contas/model/conta.model';
 
+// ---------- Gestão financeira ----------
+
+export type TipoConta = 'CORRENTE' | 'POUPANCA' | 'CARTEIRA' | 'INVESTIMENTO';
+
+/** Uma das contas do cliente (GET /minha-conta/contas). */
+export interface MinhaConta {
+  id: number;
+  nome: string;
+  tipo: TipoConta;
+  agencia: string;
+  numero: string;
+  saldo: number;
+  status: StatusConta;
+  /** A primeira conta: a das chaves Pix e dos boletos (não pode ser encerrada). */
+  principal: boolean;
+  abertaEm: string;
+}
+
+export interface NovaConta {
+  nome: string;
+  tipo: TipoConta;
+}
+
+export type TipoLancamento = 'RECEITA' | 'DESPESA';
+
+export interface Lancamento {
+  contaId: number;
+  tipo: TipoLancamento;
+  valor: number;
+  categoriaId: number;
+  descricao: string;
+}
+
+/** Categoria que o cliente enxerga: padrão do banco, de sistema (só para filtrar) ou própria. */
+export interface CategoriaCliente {
+  id: number;
+  descricao: string;
+  propria: boolean;
+  sistema: boolean;
+}
+
+export interface TotalCategoria {
+  categoriaId: number;
+  categoria: string;
+  total: number;
+}
+
+/** Tela inicial: saldo por conta e geral, receitas e despesas do mês. */
+export interface ResumoFinanceiro {
+  saldoTotal: number;
+  contas: MinhaConta[];
+  receitasMes: number;
+  despesasMes: number;
+  despesasPorCategoria: TotalCategoria[];
+}
+
+/** Filtros das transações (todos opcionais; datas AAAA-MM-DD). */
+export interface FiltroTransacoes {
+  contaId?: number | null;
+  categoriaId?: number | null;
+  tipo?: 'ENTRADA' | 'SAIDA' | null;
+  inicio: string;
+  fim: string;
+}
+
 /** GET /minha-conta/dados */
 export interface MeusDados {
   nome: string;
@@ -92,6 +157,8 @@ export interface ConsultaBoleto {
 }
 
 export interface Transferencia {
+  /** De qual das minhas contas sai (sem ela, a principal). */
+  contaOrigemId?: number;
   agencia: string;
   numero: string;
   valor: number;

@@ -12,19 +12,8 @@ const ALTURA = 50;
  */
 @Component({
   selector: 'app-codigo-barras',
-  template: `
-    <svg [attr.viewBox]="'0 0 ' + desenho().largura + ' ' + altura" preserveAspectRatio="none" role="img"
-         [attr.aria-label]="'Código de barras ' + codigo()">
-      <rect [attr.width]="desenho().largura" [attr.height]="altura" fill="#fff" />
-      @for (b of desenho().barras; track $index) {
-        <rect [attr.x]="b.x" [attr.width]="b.w" [attr.height]="altura" fill="#000" />
-      }
-    </svg>
-  `,
-  styles: `
-    :host { display: block; }
-    svg { display: block; width: 100%; height: 56px; }
-  `,
+  templateUrl: './codigo-barras.html',
+  styleUrl: './codigo-barras.css',
 })
 export class CodigoBarras {
   readonly codigo = input.required<string>();

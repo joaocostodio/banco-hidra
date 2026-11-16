@@ -31,6 +31,8 @@
       <small>{{ auth.usuario()?.email }}</small>
     </div>
     <a mat-menu-item routerLink="/app/perfil"><mat-icon>person</mat-icon>Meu perfil</a>
+    <a mat-menu-item routerLink="/app/categorias"><mat-icon>sell</mat-icon>Categorias</a>
+    <a mat-menu-item routerLink="/app/transferir"><mat-icon>swap_horiz</mat-icon>Transferir</a>
     <button mat-menu-item (click)="trocarSenha()"><mat-icon>key</mat-icon>Trocar senha</button>
     <button mat-menu-item (click)="auth.sair()"><mat-icon>logout</mat-icon>Sair</button>
   </mat-menu>

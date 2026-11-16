@@ -65,3 +65,13 @@ mat-progress-bar {
   height: 18px;
   color: var(--prata);
 }
+
+.criar {
+  margin-top: 12px;
+}
+
+.erro-campo {
+  margin: -8px 0 12px 14px;
+  font-size: 12px;
+  color: var(--mat-sys-error);
+}

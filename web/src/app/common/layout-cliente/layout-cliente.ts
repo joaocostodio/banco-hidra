@@ -31,10 +31,10 @@ export class LayoutCliente {
 
   protected readonly abas: Aba[] = [
     { rota: '/app', icone: 'home', nome: 'Início', exato: true },
-    { rota: '/app/extrato', icone: 'receipt_long', nome: 'Extrato' },
+    { rota: '/app/extrato', icone: 'receipt_long', nome: 'Transações' },
+    { rota: '/app/contas', icone: 'account_balance_wallet', nome: 'Contas' },
     { rota: '/app/pix', icone: 'pix', nome: 'Pix' },
-    { rota: '/app/transferir', icone: 'swap_horiz', nome: 'Transferir' },
-    // O perfil continua no menu do avatar (canto de cima), que aparece também no celular.
+    // Transferir fica nos atalhos do início e da tela de contas; perfil, categorias e boletos, no menu do avatar.
     { rota: '/app/boletos', icone: 'receipt', nome: 'Boletos' },
   ];
 

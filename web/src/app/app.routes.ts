@@ -40,14 +40,20 @@ export const routes: Routes = [
     path: 'app',
     component: LayoutCliente,
     canActivate: [exigePerfil('CLIENTE')],
-    // As rotas da conta (início, extrato, perfil), do Pix e dos boletos ficam no mesmo nível:
-    // /app, /app/pix, /app/extrato, /app/boletos...
+    // As rotas da conta (início, extrato, perfil), da gestão financeira (contas, lançar, categorias),
+    // do Pix e dos boletos ficam no mesmo nível: /app, /app/contas, /app/extrato, /app/pix...
     loadChildren: () =>
       Promise.all([
         import('./pages/minha-conta/routes/minha-conta.routes'),
+        import('./pages/financas/routes/financas.routes'),
         import('./pages/pix/routes/pix.routes'),
         import('./pages/boletos/routes/boletos.routes'),
-      ]).then(([conta, pix, boletos]) => [...conta.MINHA_CONTA_ROUTES, ...pix.PIX_ROUTES, ...boletos.BOLETOS_ROUTES]),
+      ]).then(([conta, financas, pix, boletos]) => [
+        ...conta.MINHA_CONTA_ROUTES,
+        ...financas.FINANCAS_ROUTES,
+        ...pix.PIX_ROUTES,
+        ...boletos.BOLETOS_ROUTES,
+      ]),
   },
 
   { path: '**', redirectTo: '' },

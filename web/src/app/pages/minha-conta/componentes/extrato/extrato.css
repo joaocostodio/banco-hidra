@@ -1,5 +1,12 @@
+.cabeca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
 h1 {
-  margin: 0 0 16px;
+  margin: 0;
   font-size: 26px;
   font-weight: 650;
 }
@@ -9,7 +16,11 @@ h1 {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+}
+
+.filtros mat-form-field {
+  flex: 1 1 200px;
 }
 
 mat-button-toggle-group {

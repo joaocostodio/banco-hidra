@@ -56,3 +56,14 @@ small {
 .valor.entrada {
   color: var(--verde);
 }
+
+/* Nome da conta, quando a lista junta várias contas */
+.conta {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--superficie-3);
+  color: var(--texto);
+  font-size: 11px;
+}

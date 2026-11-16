@@ -16,13 +16,20 @@ export interface Transacao {
   id: number;
   contaId: number;
   contaNumero: string;
+  /** Nome que o cliente deu à conta ("Conta corrente", "Carteira"...). */
+  contaNome: string;
   tipo: 'ENTRADA' | 'SAIDA';
   valor: number;
   saldoApos: number;
   descricao: string;
+  categoriaId: number;
   categoria: string;
   contraparteNome: string | null;
   contraparteConta: string | null;
+  /** Transferência entre duas contas do mesmo cliente. */
+  interna: boolean;
+  /** Nome da outra conta (só nas internas). */
+  contraparteContaNome: string | null;
   autenticacao: string;
   dataHora: string;
 }

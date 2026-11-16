@@ -1,4 +1,31 @@
-<h1>Extrato</h1>
+<div class="cabeca">
+  <h1>Transações</h1>
+  <span class="espaco"></span>
+  <a matButton routerLink="/app/categorias"><mat-icon>sell</mat-icon>Categorias</a>
+</div>
+
+<div class="filtros">
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Conta</mat-label>
+    <!-- 0 = todas (o mat-select mostra o campo vazio quando o valor é null) -->
+    <mat-select [value]="contaId() ?? 0" (selectionChange)="contaId.set($event.value || null)">
+      <mat-option [value]="0">Todas as contas</mat-option>
+      @for (c of listaContas(); track c.id) {
+        <mat-option [value]="c.id">{{ c.nome }}@if (c.status === 'ENCERRADA') { (encerrada)}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Categoria</mat-label>
+    <mat-select [value]="categoriaId() ?? 0" (selectionChange)="categoriaId.set($event.value || null)">
+      <mat-option [value]="0">Todas as categorias</mat-option>
+      @for (c of listaCategorias(); track c.id) {
+        <mat-option [value]="c.id">{{ c.descricao }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</div>
 
 <div class="filtros">
   <mat-button-toggle-group
@@ -10,6 +37,7 @@
     <mat-button-toggle [value]="7">7 dias</mat-button-toggle>
     <mat-button-toggle [value]="30">30 dias</mat-button-toggle>
     <mat-button-toggle [value]="90">90 dias</mat-button-toggle>
+    <mat-button-toggle [value]="365">1 ano</mat-button-toggle>
   </mat-button-toggle-group>
 
   <mat-chip-listbox
@@ -22,9 +50,13 @@
     <mat-chip-option value="ENTRADA">Entradas</mat-chip-option>
     <mat-chip-option value="SAIDA">Saídas</mat-chip-option>
   </mat-chip-listbox>
+
+  @if (temFiltro()) {
+    <button matButton (click)="limparFiltros()"><mat-icon>filter_alt_off</mat-icon>Limpar filtros</button>
+  }
 </div>
 
-@if (extrato.value()) {
+@if (extrato.hasValue()) {
   <div class="resumo">
     <div class="cartao">
       <small>Entrou</small>
@@ -44,11 +76,11 @@
   <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ mensagemDeErro(extrato.error()) }}</div>
 }
 
-@if (extrato.value()) {
+@if (extrato.hasValue()) {
   @if (grupos().length === 0) {
     <div class="cartao vazio">
       <mat-icon>receipt_long</mat-icon>
-      Nenhuma movimentação nos últimos {{ dias() }} dias.
+      Nenhuma transação {{ temFiltro() ? 'com esses filtros' : '' }} no período.
     </div>
   }
   @for (g of grupos(); track g.dia) {
@@ -61,7 +93,7 @@
             {{ g.dia + 'T00:00' | date: "EEE, d 'de' MMM" }}
           }
         </h2>
-        @if (tipo() === 'tudo') {
+        @if (mostraSaldoDoDia()) {
           <small>saldo do dia <span class="num">{{ minhaConta.saldoOculto() ? '••••' : (g.saldoFinal | currency: 'BRL') }}</span></small>
         }
       </header>
@@ -70,6 +102,7 @@
           <app-item-transacao
             [transacao]="t"
             formatoData="hora"
+            [mostrarConta]="contaId() === null"
             [oculto]="minhaConta.saldoOculto()"
             (abrir)="abrirComprovante($event)"
           />

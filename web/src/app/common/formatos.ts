@@ -27,6 +27,25 @@ export function iconeDaCategoria(categoria: string | null | undefined): string {
       return 'receipt_long';
     case 'Saque':
       return 'payments';
+    // Categorias padrão dos lançamentos
+    case 'Alimentação':
+      return 'restaurant';
+    case 'Moradia':
+      return 'home';
+    case 'Transporte':
+      return 'directions_car';
+    case 'Saúde':
+      return 'medical_services';
+    case 'Educação':
+      return 'school';
+    case 'Lazer':
+      return 'celebration';
+    case 'Compras':
+      return 'shopping_bag';
+    case 'Salário':
+      return 'work';
+    case 'Investimentos':
+      return 'trending_up';
     default:
       return 'sell';
   }

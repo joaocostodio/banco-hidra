@@ -184,6 +184,155 @@
   padding: 6px;
 }
 
+.bola.despesa {
+  color: #ff9b9b;
+}
+
+/* ---------- Saldo por conta (rola de lado no celular) ---------- */
+.contas {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* rola com o dedo/mouse; a barra só ocupava espaço */
+}
+
+.contas::-webkit-scrollbar {
+  display: none;
+}
+
+.conta {
+  flex: none;
+  display: grid;
+  gap: 2px;
+  min-width: 150px;
+  padding: 12px 14px;
+  border-radius: var(--raio-grande);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  color: var(--texto);
+  text-decoration: none;
+  scroll-snap-align: start;
+  transition: border-color 0.15s;
+}
+
+.conta:hover {
+  border-color: var(--verde-borda);
+}
+
+.conta .mat-icon {
+  color: var(--verde);
+}
+
+.conta small {
+  color: var(--texto-suave);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conta.nova {
+  min-width: 110px;
+  place-content: center;
+  justify-items: center;
+  border-style: dashed;
+}
+
+/* ---------- O mês ---------- */
+.mes {
+  margin-bottom: 16px;
+}
+
+.numeros {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 4px 18px 14px;
+}
+
+.numeros small {
+  display: block;
+  color: var(--texto-suave);
+  font-size: 12px;
+}
+
+.numeros b {
+  font-size: 17px;
+}
+
+.mes h4 {
+  margin: 4px 18px 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.gastos {
+  list-style: none;
+  margin: 0;
+  padding: 0 6px 8px;
+}
+
+.gastos a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gastos a:hover {
+  background: rgb(255 255 255 / 4%);
+}
+
+.gastos .nome {
+  flex: 1;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.barra {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--superficie-3);
+  overflow: hidden;
+}
+
+.barra > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: #ff9b9b;
+}
+
+.gastos .lado {
+  display: grid;
+  justify-items: end;
+}
+
+.gastos .lado small {
+  color: var(--texto-suave);
+  font-size: 11.5px;
+}
+
+.vazio-mes {
+  margin: 0;
+  padding: 0 18px 16px;
+  font-size: 13px;
+}
+
+@media (max-width: 420px) {
+  .numeros b {
+    font-size: 14.5px;
+  }
+}
+
 @media (max-width: 420px) {
   .bola {
     width: 52px;

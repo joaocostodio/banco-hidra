@@ -5,6 +5,7 @@ import { Comprovante } from '../../../common/comprovante/comprovante.model';
 import { API } from '../../../common/config';
 import {
   Boleto,
+  CategoriaCliente,
   ChavePix,
   CobrancaPix,
   CodigoPixLido,
@@ -13,8 +14,13 @@ import {
   EmissaoBoleto,
   Destinatario,
   EnvioPix,
+  FiltroTransacoes,
+  Lancamento,
   MeusDados,
+  MinhaConta,
+  NovaConta,
   Periodo,
+  ResumoFinanceiro,
   TipoChavePix,
   Transacao,
   Transferencia,
@@ -40,8 +46,65 @@ export class MinhaContaService {
     }
   }
 
+  /** A conta principal (a das chaves Pix e dos boletos). */
   conta(): Observable<Conta> {
     return this.http.get<Conta>(this.url);
+  }
+
+  // ---------- Gestão financeira ----------
+  resumo(): Observable<ResumoFinanceiro> {
+    return this.http.get<ResumoFinanceiro>(`${this.url}/resumo`);
+  }
+
+  contas(): Observable<MinhaConta[]> {
+    return this.http.get<MinhaConta[]>(`${this.url}/contas`);
+  }
+
+  abrirConta(conta: NovaConta): Observable<MinhaConta> {
+    return this.http.post<MinhaConta>(`${this.url}/contas`, conta);
+  }
+
+  editarConta(id: number, conta: NovaConta): Observable<MinhaConta> {
+    return this.http.put<MinhaConta>(`${this.url}/contas/${id}`, conta);
+  }
+
+  encerrarConta(id: number): Observable<MinhaConta> {
+    return this.http.delete<MinhaConta>(`${this.url}/contas/${id}`);
+  }
+
+  /** Transações de todas as minhas contas, com filtros (vazios são ignorados). */
+  transacoes(filtro: FiltroTransacoes): Observable<Transacao[]> {
+    const params: Record<string, string> = { inicio: filtro.inicio, fim: filtro.fim };
+    if (filtro.contaId) {
+      params['contaId'] = String(filtro.contaId);
+    }
+    if (filtro.categoriaId) {
+      params['categoriaId'] = String(filtro.categoriaId);
+    }
+    if (filtro.tipo) {
+      params['tipo'] = filtro.tipo;
+    }
+    return this.http.get<Transacao[]>(`${this.url}/transacoes`, { params });
+  }
+
+  lancar(lancamento: Lancamento): Observable<Transacao> {
+    return this.http.post<Transacao>(`${this.url}/lancamentos`, lancamento);
+  }
+
+  categorias(): Observable<CategoriaCliente[]> {
+    return this.http.get<CategoriaCliente[]>(`${this.url}/categorias`);
+  }
+
+  criarCategoria(descricao: string): Observable<CategoriaCliente> {
+    return this.http.post<CategoriaCliente>(`${this.url}/categorias`, { descricao });
+  }
+
+  renomearCategoria(id: number, descricao: string): Observable<CategoriaCliente> {
+    return this.http.put<CategoriaCliente>(`${this.url}/categorias/${id}`, { descricao });
+  }
+
+  excluirCategoria(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.url}/categorias/${id}`);
   }
 
   dados(): Observable<MeusDados> {
