@@ -8,13 +8,17 @@ const LOCAL = ['localhost', '127.0.0.1', '[::1]'];
 
 interface Rede {
   enderecos: string[];
+  /** Link do túnel da Cloudflare, se houver um aberto no PC (vale para qualquer rede). */
+  tunel: string | null;
   /** O ADM ainda usa a senha padrão (que está no README). */
   senhaPadrao: boolean;
 }
 
 /**
- * "Modo turma": o endereço que os colegas usam para abrir o site no PC deles.
- * Se o ADM abriu pelo IP, é esse; se abriu pelo localhost, usa o IP deste PC na rede (informado pela API).
+ * "Modo turma": o endereço que os colegas usam para abrir o site no PC deles, nesta ordem:
+ * 1. o túnel da Cloudflare, se estiver aberto (funciona de qualquer rede: outro Wi-Fi, 4G);
+ * 2. o endereço por onde o ADM abriu o site, se não foi pelo localhost;
+ * 3. o IP deste PC na rede local (informado pela API), que só funciona no mesmo Wi-Fi.
  */
 @Injectable({ providedIn: 'root' })
 export class EnderecoTurma {
@@ -24,6 +28,10 @@ export class EnderecoTurma {
 
   /** Ex.: http://192.168.0.15:4300 (null se o PC não estiver numa rede local). */
   readonly url = computed(() => {
+    const tunel = this.rede.value()?.tunel;
+    if (tunel) {
+      return tunel;
+    }
     if (!LOCAL.includes(location.hostname)) {
       return location.origin;
     }

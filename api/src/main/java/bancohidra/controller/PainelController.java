@@ -46,9 +46,11 @@ public class PainelController {
     @GET
     @Path("/rede")
     public RedeResponse rede() {
-        return new RedeResponse(redeService.enderecosLocais(), logado.usuario().confereSenha(senhaPadraoAdmin));
+        return new RedeResponse(redeService.enderecosLocais(), redeService.tunel().orElse(null),
+                logado.usuario().confereSenha(senhaPadraoAdmin));
     }
 
-    public record RedeResponse(List<String> enderecos, boolean senhaPadrao) {
+    /** {@code tunel}: link público do túnel da Cloudflare, se houver um aberto (colegas em outras redes). */
+    public record RedeResponse(List<String> enderecos, String tunel, boolean senhaPadrao) {
     }
 }
