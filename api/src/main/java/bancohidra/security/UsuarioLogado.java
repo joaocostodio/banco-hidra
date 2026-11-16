@@ -33,8 +33,9 @@ public class UsuarioLogado {
         return usuario;
     }
 
+    /** A conta principal do cliente logado (a das chaves Pix e dos boletos). */
     public Conta conta() {
-        Conta conta = Conta.doTitular(usuario());
+        Conta conta = Conta.principalDe(usuario());
         if (conta == null) {
             throw new NaoEncontradoException("Você não tem conta no Banco Hidra");
         }

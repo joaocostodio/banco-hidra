@@ -1,6 +1,8 @@
 package bancohidra.controller;
 
 import bancohidra.dto.ContaDtos.ContaResponse;
+import bancohidra.dto.FinancasDtos.LancamentoRequest;
+import bancohidra.dto.FinancasDtos.ResumoResponse;
 import bancohidra.dto.PixDtos.DestinatarioResponse;
 import bancohidra.dto.TransacaoDtos.ComprovanteResponse;
 import bancohidra.dto.TransacaoDtos.TransacaoResponse;
@@ -8,12 +10,15 @@ import bancohidra.dto.TransacaoDtos.TransferenciaRequest;
 import bancohidra.entity.Categoria;
 import bancohidra.entity.Conta;
 import bancohidra.entity.StatusConta;
+import bancohidra.entity.TipoTransacao;
 import bancohidra.entity.Transacao;
 import bancohidra.entity.Usuario;
 import bancohidra.exception.NaoEncontradoException;
 import bancohidra.security.Papeis;
 import bancohidra.security.UsuarioLogado;
+import bancohidra.service.ClienteService;
 import bancohidra.service.ConsultaService;
+import bancohidra.service.FinancasService;
 import bancohidra.service.MovimentacaoService;
 import bancohidra.util.Cpf;
 import jakarta.annotation.security.RolesAllowed;
@@ -33,7 +38,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-/** Internet banking do cliente. A conta é sempre a de quem está logado. */
+/**
+ * Internet banking e gestão financeira do cliente. Tudo parte do usuário do token: as contas,
+ * categorias e transações de outros clientes nunca aparecem (respondem "não encontrado").
+ */
 @Path("/minha-conta")
 @RolesAllowed(Papeis.CLIENTE)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -49,6 +57,13 @@ public class MinhaContaController {
     @Inject
     ConsultaService consultaService;
 
+    @Inject
+    FinancasService financasService;
+
+    @Inject
+    ClienteService clienteService;
+
+    /** A conta principal (a das chaves Pix e dos boletos). */
     @GET
     public ContaResponse conta() {
         return ContaResponse.de(logado.conta());
@@ -68,6 +83,29 @@ public class MinhaContaController {
                                     StatusConta status, java.time.LocalDateTime clienteDesde) {
     }
 
+    /** Tela inicial: saldo por conta e geral, receitas e despesas do mês. */
+    @GET
+    @Path("/resumo")
+    public ResumoResponse resumo() {
+        return financasService.resumo(logado.usuario(), LocalDate.now());
+    }
+
+    /**
+     * Transações de todas as minhas contas, com filtros opcionais por conta, categoria, tipo
+     * (ENTRADA/SAIDA) e período (datas AAAA-MM-DD; padrão: últimos 30 dias).
+     */
+    @GET
+    @Path("/transacoes")
+    public List<TransacaoResponse> transacoes(@QueryParam("contaId") Long contaId,
+                                              @QueryParam("categoriaId") Long categoriaId,
+                                              @QueryParam("tipo") TipoTransacao tipo,
+                                              @QueryParam("inicio") LocalDate inicio,
+                                              @QueryParam("fim") LocalDate fim) {
+        return financasService.transacoes(logado.usuario(), contaId, categoriaId, tipo, inicio, fim)
+                .stream().map(TransacaoResponse::de).toList();
+    }
+
+    /** Extrato da conta principal (mantido para o app antigo; o novo usa /transacoes). */
     @GET
     @Path("/extrato")
     public List<TransacaoResponse> extrato(@QueryParam("inicio") LocalDate inicio,
@@ -75,10 +113,18 @@ public class MinhaContaController {
         return consultaService.extrato(logado.conta(), inicio, fim);
     }
 
+    /** Lançar uma receita ou despesa numa das minhas contas. */
+    @POST
+    @Path("/lancamentos")
+    public Response lancar(@Valid LancamentoRequest req) {
+        Transacao t = financasService.lancar(logado.usuario(), req);
+        return Response.status(Response.Status.CREATED).entity(TransacaoResponse.de(t)).build();
+    }
+
     @GET
     @Path("/comprovantes/{autenticacao}")
     public ComprovanteResponse comprovante(@PathParam("autenticacao") UUID autenticacao) {
-        return consultaService.comprovante(autenticacao, logado.conta());
+        return consultaService.comprovante(autenticacao, logado.usuario());
     }
 
     /** Confere de quem é a conta antes de transferir. */
@@ -91,12 +137,15 @@ public class MinhaContaController {
                 conta.agencia, conta.numero, null);
     }
 
+    /** Transferência para outra pessoa ou entre as minhas contas (a origem é sempre uma conta minha). */
     @POST
     @Path("/transferencias")
     public Response transferir(@Valid TransferenciaRequest req) {
+        Usuario eu = logado.usuario();
+        Conta origem = req.contaOrigemId() == null ? logado.conta() : clienteService.contaDo(eu, req.contaOrigemId());
         Conta destino = contaDestino(req.agencia(), req.numero());
-        Transacao saida = movimentacaoService.transferir(logado.conta().id, destino.id,
-                req.valor(), req.descricao(), Categoria.TRANSFERENCIA);
+        Transacao saida = movimentacaoService.transferir(origem.id, destino.id, req.valor(), req.descricao(),
+                Categoria.TRANSFERENCIA);
         return Response.status(Response.Status.CREATED).entity(TransacaoResponse.de(saida)).build();
     }
 

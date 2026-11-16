@@ -4,6 +4,7 @@ import bancohidra.dto.TransacaoDtos.ComprovanteResponse;
 import bancohidra.dto.TransacaoDtos.TransacaoResponse;
 import bancohidra.entity.Conta;
 import bancohidra.entity.Transacao;
+import bancohidra.entity.Usuario;
 import bancohidra.exception.NaoEncontradoException;
 import bancohidra.exception.RegraNegocioException;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -34,13 +35,13 @@ public class ConsultaService {
     }
 
     /**
-     * Comprovante pela autenticação. Se {@code somenteDaConta} for informado, só devolve quando
-     * essa conta participou (o cliente não pode ver comprovante dos outros).
+     * Comprovante pela autenticação. Se {@code somenteDoTitular} for informado, só devolve quando uma
+     * conta dele participou (o cliente não pode ver comprovante dos outros). O administrador passa null.
      */
-    public ComprovanteResponse comprovante(UUID autenticacao, Conta somenteDaConta) {
+    public ComprovanteResponse comprovante(UUID autenticacao, Usuario somenteDoTitular) {
         List<Transacao> pernas = Transacao.porAutenticacao(autenticacao);
-        boolean permitido = somenteDaConta == null
-                || pernas.stream().anyMatch(t -> t.conta.id.equals(somenteDaConta.id));
+        boolean permitido = somenteDoTitular == null
+                || pernas.stream().anyMatch(t -> t.conta.titular.id.equals(somenteDoTitular.id));
         if (pernas.isEmpty() || !permitido) {
             throw new NaoEncontradoException("Comprovante não encontrado");
         }

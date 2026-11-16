@@ -13,14 +13,19 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import java.util.List;
 
 /**
- * Ao subir a API garante o mínimo para o banco funcionar: as categorias usadas pelo
- * próprio sistema e um administrador (configurado em application.properties).
+ * Ao subir a API garante o mínimo para o banco funcionar: as categorias usadas pelo próprio
+ * sistema, as categorias padrão dos lançamentos e um administrador (configurado em application.properties).
  */
 @ApplicationScoped
 public class Inicializacao {
 
     private static final List<String> CATEGORIAS_SISTEMA = List.of(
             Categoria.DEPOSITO, Categoria.TRANSFERENCIA, Categoria.PIX, Categoria.PAGAMENTO, Categoria.SAQUE);
+
+    /** Categorias padrão para os lançamentos dos clientes (o administrador pode editar e criar outras). */
+    private static final List<String> CATEGORIAS_PADRAO = List.of(
+            "Alimentação", "Moradia", "Transporte", "Saúde", "Educação", "Lazer", "Compras", "Salário",
+            "Investimentos", "Outros");
 
     @ConfigProperty(name = "banco.admin.nome")
     String adminNome;
@@ -34,10 +39,18 @@ public class Inicializacao {
     @Transactional
     void aoIniciar(@Observes StartupEvent evento) {
         for (String descricao : CATEGORIAS_SISTEMA) {
-            Categoria categoria = Categoria.porDescricao(descricao).orElseGet(Categoria::new);
+            Categoria categoria = Categoria.globalPorDescricao(descricao).orElseGet(Categoria::new);
             categoria.descricao = descricao;
             categoria.sistema = true;
             categoria.persist();
+        }
+        // As padrão só são criadas se faltarem: o administrador pode ter renomeado ou excluído alguma.
+        if (Categoria.count("dono is null and sistema = false") == 0) {
+            for (String descricao : CATEGORIAS_PADRAO) {
+                Categoria categoria = new Categoria();
+                categoria.descricao = descricao;
+                categoria.persist();
+            }
         }
 
         // Só cria: se o administrador já existe, a senha que ele trocou pelo painel é mantida.

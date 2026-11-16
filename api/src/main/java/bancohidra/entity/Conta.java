@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Conta corrente do Banco Hidra.
@@ -25,6 +26,20 @@ import java.time.LocalDateTime;
 public class Conta extends PanacheEntity {
 
     public static final String AGENCIA_PADRAO = "0001";
+    public static final String NOME_PRINCIPAL = "Conta corrente";
+    /** Quantas contas abertas (não encerradas) um cliente pode ter. */
+    public static final int LIMITE_POR_CLIENTE = 10;
+
+    /**
+     * Nome que o cliente dá à conta ("Carteira", "Reserva de emergência"...).
+     * O default na coluna preenche as contas que já existiam antes deste campo.
+     */
+    @Column(nullable = false, length = 40, columnDefinition = "varchar(40) default '" + NOME_PRINCIPAL + "' not null")
+    public String nome = NOME_PRINCIPAL;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 15, columnDefinition = "varchar(15) default 'CORRENTE' not null")
+    public TipoConta tipo = TipoConta.CORRENTE;
 
     @Column(nullable = false, length = 4)
     public String agencia = AGENCIA_PADRAO;
@@ -114,7 +129,20 @@ public class Conta extends PanacheEntity {
         return find("numero", numero).firstResult();
     }
 
-    public static Conta doTitular(Usuario titular) {
-        return find("titular", titular).firstResult();
+    /**
+     * A conta principal do cliente: a primeira que ele abriu (é a das chaves Pix e dos boletos).
+     * Ela não pode ser encerrada pelo cliente.
+     */
+    public static Conta principalDe(Usuario titular) {
+        return find("titular = ?1 order by id", titular).firstResult();
+    }
+
+    /** Todas as contas do cliente, a principal primeiro (inclui as encerradas, para o histórico). */
+    public static List<Conta> doTitular(Usuario titular) {
+        return list("titular = ?1 order by id", titular);
+    }
+
+    public static long abertasDe(Usuario titular) {
+        return count("titular = ?1 and status <> ?2", titular, StatusConta.ENCERRADA);
     }
 }

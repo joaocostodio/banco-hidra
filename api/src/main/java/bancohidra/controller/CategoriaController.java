@@ -7,7 +7,6 @@ import bancohidra.entity.Transacao;
 import bancohidra.exception.NaoEncontradoException;
 import bancohidra.exception.RegraNegocioException;
 import bancohidra.security.Papeis;
-import io.quarkus.panache.common.Sort;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -39,7 +38,7 @@ public class CategoriaController {
                 .createQuery("select t.categoria.id, count(t) from Transacao t group by t.categoria.id", Object[].class)
                 .getResultStream()
                 .collect(Collectors.toMap(l -> (Long) l[0], l -> (Long) l[1]));
-        return Categoria.<Categoria>listAll(Sort.ascending("descricao")).stream()
+        return Categoria.globais().stream()
                 .map(c -> CategoriaResponse.de(c, usos.getOrDefault(c.id, 0L))).toList();
     }
 
@@ -92,19 +91,18 @@ public class CategoriaController {
         return Transacao.count("categoria", categoria);
     }
 
+    /** O administrador só gerencia as globais: as categorias próprias são privadas de cada cliente. */
     private Categoria encontrar(Long id) {
         Categoria categoria = Categoria.findById(id);
-        if (categoria == null) {
+        if (categoria == null || categoria.dono != null) {
             throw new NaoEncontradoException("Categoria não encontrada");
         }
         return categoria;
     }
 
     private void exigirDescricaoLivre(String descricao, Long idAtual) {
-        Categoria.porDescricao(descricao)
-                .filter(existente -> !existente.id.equals(idAtual))
-                .ifPresent(existente -> {
-                    throw new RegraNegocioException("Já existe uma categoria com esta descrição");
-                });
+        if (Categoria.descricaoGlobalEmUso(descricao, idAtual)) {
+            throw new RegraNegocioException("Já existe uma categoria com esta descrição");
+        }
     }
 }

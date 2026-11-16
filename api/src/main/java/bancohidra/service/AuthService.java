@@ -26,8 +26,12 @@ public class AuthService {
     @ConfigProperty(name = "smallrye.jwt.new-token.lifespan", defaultValue = "3600")
     long validadeSegundos;
 
+    /** Sessão recém-aberta: o token (vai para o cookie) e o que o site pode ver. */
+    public record Sessao(String token, LoginResponse resposta) {
+    }
+
     /** Resultado do login. Não lançamos exceção aqui dentro para não desfazer a contagem de falhas. */
-    public record Resultado(LoginResponse resposta, String erro) {
+    public record Resultado(Sessao sessao, String erro) {
     }
 
     @Transactional
@@ -48,7 +52,7 @@ public class AuthService {
     }
 
     @Transactional
-    public LoginResponse trocarSenha(Long usuarioId, String senhaAtual, String novaSenha) {
+    public Sessao trocarSenha(Long usuarioId, String senhaAtual, String novaSenha) {
         Usuario usuario = Usuario.findById(usuarioId);
         if (usuario == null || !usuario.confereSenha(senhaAtual)) {
             throw new RegraNegocioException("Senha atual incorreta");
@@ -60,16 +64,19 @@ public class AuthService {
         return emitir(usuario); // token novo, agora com o papel verdadeiro
     }
 
-    LoginResponse emitir(Usuario usuario) {
+    /**
+     * Assina o JWT. O papel vai no token ({@code groups}); quem ainda está com a senha provisória
+     * recebe só o papel TROCAR_SENHA, que não abre nenhuma outra rota.
+     */
+    public Sessao emitir(Usuario usuario) {
         Instant expira = Instant.now().plusSeconds(validadeSegundos);
         String papel = usuario.isTrocarSenha() ? Papeis.TROCAR_SENHA : usuario.perfil.name();
         String token = Jwt.subject(String.valueOf(usuario.id))
                 .upn(usuario.email)
                 .groups(Set.of(papel))
-                .claim("nome", usuario.nome)
                 .expiresAt(expira)
                 .sign();
-        return new LoginResponse(token, expira, usuario.isTrocarSenha(), UsuarioResponse.de(usuario));
+        return new Sessao(token, new LoginResponse(expira, usuario.isTrocarSenha(), UsuarioResponse.de(usuario)));
     }
 
     private static String mensagemBloqueio(Usuario usuario) {

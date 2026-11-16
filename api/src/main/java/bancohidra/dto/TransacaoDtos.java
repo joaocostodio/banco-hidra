@@ -16,23 +16,27 @@ public final class TransacaoDtos {
     private TransacaoDtos() {
     }
 
-    public record TransacaoResponse(Long id, Long contaId, String contaNumero, TipoTransacao tipo,
-                                    BigDecimal valor, BigDecimal saldoApos, String descricao, String categoria,
-                                    String contraparteNome, String contraparteConta,
+    public record TransacaoResponse(Long id, Long contaId, String contaNumero, String contaNome, TipoTransacao tipo,
+                                    BigDecimal valor, BigDecimal saldoApos, String descricao, Long categoriaId,
+                                    String categoria, String contraparteNome, String contraparteConta,
                                     UUID autenticacao, LocalDateTime dataHora) {
         public static TransacaoResponse de(Transacao t) {
-            return new TransacaoResponse(t.id, t.conta.id, t.conta.numero, t.tipo, t.valor, t.saldoApos,
-                    t.descricao, t.categoria.descricao,
+            return new TransacaoResponse(t.id, t.conta.id, t.conta.numero, t.conta.nome, t.tipo, t.valor,
+                    t.saldoApos, t.descricao, t.categoria.id, t.categoria.descricao,
                     t.contraparte == null ? null : t.contraparte.titular.nome,
                     t.contraparte == null ? null : t.contraparte.numero,
                     t.autenticacao, t.dataHora);
         }
     }
 
-    /** Transferência feita pelo cliente: a origem é a conta dele; o destino, agência + número. */
+    /**
+     * Transferência feita pelo cliente. A origem é uma conta dele ({@code contaOrigemId}; sem ela, a principal);
+     * o destino, agência + número (de outra pessoa ou de outra conta dele mesmo).
+     */
     public record TransferenciaRequest(
-            @NotBlank(message = "Informe a agência") String agencia,
-            @NotBlank(message = "Informe o número da conta") String numero,
+            Long contaOrigemId,
+            @NotBlank(message = "Informe a agência") @Size(max = 4) String agencia,
+            @NotBlank(message = "Informe o número da conta") @Size(max = 8) String numero,
             @NotNull(message = "Informe o valor") BigDecimal valor,
             @Size(max = 200) String descricao) {
     }

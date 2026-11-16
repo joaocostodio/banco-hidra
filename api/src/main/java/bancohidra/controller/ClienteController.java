@@ -37,16 +37,17 @@ public class ClienteController {
 
     @GET
     public List<ClienteResponse> listar() {
-        List<Conta> contas = Conta.list(
-                "from Conta c join fetch c.titular t where t.perfil = ?1 order by t.nome", Perfil.CLIENTE);
-        return contas.stream().map(c -> ClienteResponse.de(c.titular, c)).toList();
+        // Uma linha por cliente, com a conta principal (a primeira aberta), numa consulta só.
+        List<Conta> principais = Conta.list("from Conta c join fetch c.titular t where t.perfil = ?1 and c.id = "
+                + "(select min(c2.id) from Conta c2 where c2.titular = t) order by t.nome", Perfil.CLIENTE);
+        return principais.stream().map(c -> ClienteResponse.de(c.titular, c)).toList();
     }
 
     @GET
     @Path("/{id}")
     public ClienteResponse buscar(@PathParam("id") Long id) {
         Usuario usuario = clienteService.buscar(id);
-        return ClienteResponse.de(usuario, Conta.doTitular(usuario));
+        return ClienteResponse.de(usuario, Conta.principalDe(usuario));
     }
 
     /** Cadastra o cliente e abre a conta. A resposta traz a senha provisória (única vez que aparece). */
@@ -63,7 +64,7 @@ public class ClienteController {
     @Path("/{id}")
     public ClienteResponse editar(@PathParam("id") Long id, @Valid EditarClienteRequest req) {
         Usuario usuario = clienteService.editar(id, req);
-        return ClienteResponse.de(usuario, Conta.doTitular(usuario));
+        return ClienteResponse.de(usuario, Conta.principalDe(usuario));
     }
 
     /** Cliente esqueceu a senha: gera outra provisória (ele troca no próximo acesso). */
