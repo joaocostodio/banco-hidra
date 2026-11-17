@@ -1,4 +1,4 @@
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, PercentPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,12 +16,13 @@ import { MinhaConta } from '../../../minha-conta/model/minha-conta.model';
 import { MinhaContaService } from '../../../minha-conta/services/minha-conta.service';
 import { IconeContaPipe, LIMITE_CONTAS, NomeTipoContaPipe } from '../../services/financas';
 import { ContaDialog, DadosContaDialog } from '../conta-dialog/conta-dialog';
+import { MetaDialog } from '../meta-dialog/meta-dialog';
 
 /** As contas do cliente: saldo de cada uma e o total, abrir, editar e encerrar. */
 @Component({
   selector: 'app-minhas-contas',
   imports: [RouterLink, MatButtonModule, MatIconModule, MatMenuModule, MatProgressBarModule, CurrencyPipe,
-    IconeContaPipe, NomeTipoContaPipe],
+    DatePipe, PercentPipe, IconeContaPipe, NomeTipoContaPipe],
   templateUrl: './minhas-contas.html',
   styleUrl: './minhas-contas.css',
 })
@@ -35,6 +36,8 @@ export class MinhasContas {
   protected readonly abertas = computed(() => valorOu(this.contas, []).filter((c) => c.status !== 'ENCERRADA'));
   protected readonly encerradas = computed(() => valorOu(this.contas, []).filter((c) => c.status === 'ENCERRADA'));
   protected readonly total = computed(() => this.abertas().reduce((s, c) => s + c.saldo, 0));
+  /** Para onde vai o resgate da poupança e do investimento. */
+  protected readonly idPrincipal = computed(() => this.abertas().find((c) => c.principal)?.id ?? null);
   protected readonly cheio = computed(() => this.abertas().length >= LIMITE_CONTAS);
   protected readonly erro = computed(() => (this.contas.error() ? mensagemDeErro(this.contas.error()) : ''));
 
@@ -45,6 +48,17 @@ export class MinhasContas {
       .pipe(filter((c): c is MinhaConta => !!c))
       .subscribe((c) => {
         this.snack.open(conta ? 'Conta atualizada.' : `Conta ${c.nome} aberta.`, 'OK', { duration: 2500 });
+        this.contas.reload();
+      });
+  }
+
+  protected abrirMeta(c: MinhaConta): void {
+    this.dialog
+      .open<MetaDialog, MinhaConta, MinhaConta>(MetaDialog, { data: c, width: '420px' })
+      .afterClosed()
+      .pipe(filter((atual): atual is MinhaConta => !!atual))
+      .subscribe((atual) => {
+        this.snack.open(atual.meta ? 'Meta salva.' : 'Meta removida.', 'OK', { duration: 2500 });
         this.contas.reload();
       });
   }

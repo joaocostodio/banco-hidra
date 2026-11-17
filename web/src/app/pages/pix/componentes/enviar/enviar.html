@@ -1,9 +1,13 @@
 @if (passo() !== 'pronto') {
   <header class="cabeca">
     @if (passo() === 'destino') {
-      <a matIconButton [routerLink]="ehPix() ? '/app/pix' : '/app'" aria-label="Voltar"><mat-icon>arrow_back</mat-icon></a>
+      <a matIconButton [routerLink]="ehPix() ? '/app/pix' : '/app'" aria-label="Voltar"
+        ><mat-icon>arrow_back</mat-icon></a
+      >
     } @else {
-      <button matIconButton (click)="voltar()" aria-label="Voltar"><mat-icon>arrow_back</mat-icon></button>
+      <button matIconButton (click)="voltar()" aria-label="Voltar">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
     }
     <h1>{{ titulo() }}</h1>
   </header>
@@ -33,7 +37,9 @@
           <mat-hint>CPF, e-mail, celular, chave aleatória ou o código de uma cobrança</mat-hint>
           <mat-error>Digite a chave Pix de quem vai receber</mat-error>
         </mat-form-field>
-        <button matButton="filled" class="largo" type="submit" [disabled]="ocupado()">Continuar</button>
+        <button matButton="filled" class="largo" type="submit" [disabled]="ocupado()">
+          Continuar
+        </button>
       </form>
       <p class="alternativa">
         Não tem a chave? <a routerLink="/app/transferir">Transfira com agência e conta</a>
@@ -54,58 +60,85 @@
         <h3 class="sub primeira">Entre minhas contas</h3>
         <div class="contatos">
           @for (c of destinosProprios(); track c.id) {
-            <button class="contato" (click)="usarMinhaConta(c.agencia, c.numero)" [disabled]="ocupado()">
-              <span class="avatar"><mat-icon>{{ c.tipo | iconeConta }}</mat-icon></span>
+            <button
+              class="contato"
+              (click)="usarMinhaConta(c.agencia, c.numero)"
+              [disabled]="ocupado()"
+            >
+              <span class="avatar"
+                ><mat-icon>{{ c.tipo | iconeConta }}</mat-icon></span
+              >
               <span>
                 <b>{{ c.nome }}</b>
-                <small class="num">{{ c.agencia }} / {{ c.numero }} · {{ c.saldo | currency: 'BRL' }}</small>
+                <small class="num"
+                  >{{ c.agencia }} / {{ c.numero }} · {{ c.saldo | currency: 'BRL' }}</small
+                >
               </span>
             </button>
           }
         </div>
-        <h3 class="sub">Para outra pessoa</h3>
       }
 
-      <form [formGroup]="destinoConta" (ngSubmit)="buscarDestino()" novalidate>
-        <div class="banco"><img src="hidra.svg" alt="" />Banco Hidra</div>
-        <div class="linha-conta">
-          <mat-form-field class="agencia">
-            <mat-label>Agência</mat-label>
-            <input matInput class="num" formControlName="agencia" inputmode="numeric" maxlength="4" />
-            <mat-error>4 dígitos</mat-error>
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>Conta</mat-label>
-            <input
-              #foco
-              matInput
-              class="num"
-              formControlName="numero"
-              inputmode="numeric"
-              placeholder="000000-0"
-              maxlength="8"
-              (input)="formatarNumero()"
-              autocomplete="off"
-            />
-            <mat-error>Número com dígito, ex. 123456-7</mat-error>
-          </mat-form-field>
-        </div>
-        <button matButton="filled" class="largo" type="submit" [disabled]="ocupado()">Continuar</button>
-      </form>
+      @if (origemEhInvestimento()) {
+        <p class="aviso-invest">
+          <mat-icon>info</mat-icon>
+          O resgate do investimento vai só para uma conta sua. O Imposto de Renda sobre o lucro é
+          descontado e você recebe o valor líquido.
+        </p>
+      } @else {
+        @if (destinosProprios().length > 0) {
+          <h3 class="sub">Para outra pessoa</h3>
+        }
 
-      @if (contatos().length > 0) {
-        <h3 class="sub">Transferir de novo</h3>
-        <div class="contatos">
-          @for (c of contatos(); track c.conta) {
-            <button class="contato" (click)="usarContato(c)" [disabled]="ocupado()">
-              <span class="avatar prata">{{ c.nome | iniciais }}</span>
-              <span>
-                <b>{{ c.nome }}</b>
-                <small class="num">0001 / {{ c.conta }}</small>
-              </span>
-            </button>
-          }
-        </div>
+        <form [formGroup]="destinoConta" (ngSubmit)="buscarDestino()" novalidate>
+          <div class="banco"><img src="hidra.svg" alt="" />Banco Hidra</div>
+          <div class="linha-conta">
+            <mat-form-field class="agencia">
+              <mat-label>Agência</mat-label>
+              <input
+                matInput
+                class="num"
+                formControlName="agencia"
+                inputmode="numeric"
+                maxlength="4"
+              />
+              <mat-error>4 dígitos</mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Conta</mat-label>
+              <input
+                #foco
+                matInput
+                class="num"
+                formControlName="numero"
+                inputmode="numeric"
+                placeholder="000000-0"
+                maxlength="8"
+                (input)="formatarNumero()"
+                autocomplete="off"
+              />
+              <mat-error>Número com dígito, ex. 123456-7</mat-error>
+            </mat-form-field>
+          </div>
+          <button matButton="filled" class="largo" type="submit" [disabled]="ocupado()">
+            Continuar
+          </button>
+        </form>
+
+        @if (contatos().length > 0) {
+          <h3 class="sub">Transferir de novo</h3>
+          <div class="contatos">
+            @for (c of contatos(); track c.conta) {
+              <button class="contato" (click)="usarContato(c)" [disabled]="ocupado()">
+                <span class="avatar prata">{{ c.nome | iniciais }}</span>
+                <span>
+                  <b>{{ c.nome }}</b>
+                  <small class="num">0001 / {{ c.conta }}</small>
+                </span>
+              </button>
+            }
+          </div>
+        }
       }
     }
     @if (ocupado()) {
@@ -130,7 +163,15 @@
       <h2>Quanto?</h2>
       <mat-form-field class="campo-valor">
         <span matTextPrefix>R$&nbsp;</span>
-        <input #foco matInput class="num" formControlName="valor" inputmode="decimal" placeholder="0,00" autocomplete="off" />
+        <input
+          #foco
+          matInput
+          class="num"
+          formControlName="valor"
+          inputmode="decimal"
+          placeholder="0,00"
+          autocomplete="off"
+        />
         @if (valores.controls.valor.hasError('saldo')) {
           <mat-error>Saldo insuficiente</mat-error>
         } @else if (valores.controls.valor.hasError('valor')) {
@@ -139,7 +180,10 @@
           <mat-error>Digite o valor</mat-error>
         }
         @if (saldoOrigem() !== undefined) {
-          <mat-hint>Saldo disponível{{ ehPix() ? '' : ' em ' + origem()?.nome }}: {{ saldoOrigem() | currency: 'BRL' }}</mat-hint>
+          <mat-hint
+            >Saldo disponível{{ ehPix() ? '' : ' em ' + origem()?.nome }}:
+            {{ saldoOrigem() | currency: 'BRL' }}</mat-hint
+          >
         }
       </mat-form-field>
 
@@ -168,7 +212,9 @@
           <dd>{{ o.nome }}</dd>
         }
         <dt>Para</dt>
-        <dd><b>{{ d.nome }}</b></dd>
+        <dd>
+          <b>{{ d.nome }}</b>
+        </dd>
         <dt>CPF</dt>
         <dd class="num">{{ d.cpfMascarado }}</dd>
         @if (ehPix() && d.tipoChave) {
@@ -207,7 +253,8 @@
         <h1>{{ ehPix() ? 'Pix enviado!' : 'Transferência feita!' }}</h1>
         <div class="grande num">{{ t.valor | currency: 'BRL' }}</div>
         <p>
-          para <b>{{ t.contraparteNome }}</b><br />
+          para <b>{{ t.contraparteNome }}</b
+          ><br />
           <span class="muted">{{ t.dataHora | date: "dd/MM/yyyy 'às' HH:mm" }}</span>
         </p>
         <div class="botoes">

@@ -17,7 +17,7 @@ class ContaTest {
     }
 
     private Conta novaConta() {
-        Conta conta = new Conta();
+        Conta conta = new ContaCorrente();
         conta.numero = "000001-6";
         return conta;
     }

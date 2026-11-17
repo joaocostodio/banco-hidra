@@ -28,6 +28,8 @@ public class Categoria extends PanacheEntity {
     public static final String PIX = "Pix";
     public static final String PAGAMENTO = "Pagamento";
     public static final String SAQUE = "Saque";
+    public static final String RENDIMENTO = "Rendimento";
+    public static final String IMPOSTOS = "Impostos";
 
     @Column(nullable = false, length = 150)
     public String descricao;

@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>{{ conta ? 'Editar conta' : 'Nova conta' }}</h2>
+<h2 mat-dialog-title>{{ conta ? 'Renomear conta' : 'Nova conta' }}</h2>
 
 <form [formGroup]="form" (ngSubmit)="salvar()" novalidate>
   <mat-dialog-content>
@@ -6,24 +6,41 @@
       <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
     }
 
-    <mat-form-field>
-      <mat-label>Tipo</mat-label>
-      <mat-select formControlName="tipo" (selectionChange)="tipoMudou($event.value)">
+    @if (!conta) {
+      <div class="tipos" role="radiogroup" aria-label="Tipo da conta">
         @for (t of tipos; track t) {
-          <mat-option [value]="t"><mat-icon>{{ icones[t] }}</mat-icon>{{ nomes[t] }}</mat-option>
+          <label class="tipo" [class.escolhido]="form.controls.tipo.value === t">
+            <input type="radio" formControlName="tipo" [value]="t" />
+            <mat-icon>{{ icones[t] }}</mat-icon>
+            <span>
+              <b>{{ nomes[t] }}</b>
+              <small>{{ descricoes[t] }}</small>
+            </span>
+          </label>
         }
-      </mat-select>
-    </mat-form-field>
+      </div>
+
+      @if (ehInvestimento()) {
+        <mat-form-field>
+          <mat-label>Produto</mat-label>
+          <mat-select formControlName="produto">
+            @for (p of listaProdutos(); track p.id) {
+              <mat-option [value]="p.id">{{ p.nome }} · {{ p.taxaAnual | percent: '1.2-2' }} ao ano</mat-option>
+            }
+          </mat-select>
+          <mat-hint>No resgate, o IR sobre o lucro vai de 22,5% a 15% conforme o tempo (a LCI é isenta).</mat-hint>
+        </mat-form-field>
+      }
+    }
 
     <mat-form-field>
-      <mat-label>Nome da conta</mat-label>
+      <mat-label>Nome da conta {{ conta ? '' : '(opcional)' }}</mat-label>
       <input matInput formControlName="nome" maxlength="40" placeholder="Ex.: Reserva de emergência" autocomplete="off" />
       <mat-hint align="end">{{ form.controls.nome.value.length }}/40</mat-hint>
-      <mat-error>Dê um nome para a conta</mat-error>
     </mat-form-field>
 
     @if (!conta) {
-      <p class="muted">A conta abre com saldo zero. Para colocar dinheiro, lance uma receita ou transfira de outra conta.</p>
+      <p class="muted">Abre com saldo zero. Para colocar dinheiro, transfira de outra conta sua.</p>
     }
   </mat-dialog-content>
 

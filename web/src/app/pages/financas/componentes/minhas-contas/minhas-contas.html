@@ -27,29 +27,83 @@
 
   <ul class="lista">
     @for (c of abertas(); track c.id) {
+      @let oculto = minhaConta.saldoOculto();
       <li class="cartao conta">
-        <span class="bola"><mat-icon>{{ c.tipo | iconeConta }}</mat-icon></span>
-        <a class="texto" routerLink="/app/extrato" [queryParams]="{ conta: c.id }" [attr.aria-label]="'Ver transações de ' + c.nome">
-          <b>
-            {{ c.nome }}
-            @if (c.principal) {
-              <span class="selo">principal</span>
-            }
-            @if (c.status === 'BLOQUEADA') {
-              <span class="selo bloqueada">bloqueada</span>
-            }
-          </b>
-          <small class="num">{{ c.tipo | nomeTipoConta }} · Ag {{ c.agencia }} · CC {{ c.numero }}</small>
-        </a>
-        <b class="saldo num">{{ minhaConta.saldoOculto() ? '••••' : (c.saldo | currency: 'BRL') }}</b>
-        <button matIconButton [matMenuTriggerFor]="menu" [attr.aria-label]="'Opções de ' + c.nome">
-          <mat-icon>more_vert</mat-icon>
-        </button>
+        <div class="linha">
+          <span class="bola"><mat-icon>{{ c.tipo | iconeConta }}</mat-icon></span>
+          <a class="texto" routerLink="/app/extrato" [queryParams]="{ conta: c.id }" [attr.aria-label]="'Ver transações de ' + c.nome">
+            <b>
+              {{ c.nome }}
+              @if (c.principal) {
+                <span class="selo">principal</span>
+              }
+              @if (c.status === 'BLOQUEADA') {
+                <span class="selo bloqueada">bloqueada</span>
+              }
+            </b>
+            <small class="num">{{ c.tipo | nomeTipoConta }} · Ag {{ c.agencia }} · CC {{ c.numero }}</small>
+          </a>
+          <b class="saldo num">{{ oculto ? '••••' : (c.saldo | currency: 'BRL') }}</b>
+          <button matIconButton [matMenuTriggerFor]="menu" [attr.aria-label]="'Opções de ' + c.nome">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+        </div>
+
+        <!-- O que cada tipo de conta tem de especial -->
+        @if (c.rendimento; as r) {
+          <p class="rende">
+            <mat-icon>trending_up</mat-icon>
+            Rende {{ r.regra }} · próximo: {{ r.proximo + 'T00:00' | date: 'dd/MM' }}
+          </p>
+        }
+
+        @if (c.tipo === 'POUPANCA') {
+          @if (c.meta; as m) {
+            <button type="button" class="meta" (click)="abrirMeta(c)" [attr.aria-label]="'Editar meta de ' + c.nome">
+              <span class="meta-topo">
+                <span>{{ m.descricao || 'Meta' }}{{ m.data ? ' · até ' + (m.data + 'T00:00' | date: 'MM/yyyy') : '' }}</span>
+                <b>{{ m.progresso | percent }}</b>
+              </span>
+              <span class="barra"><span [style.width.%]="m.progresso * 100"></span></span>
+              <small class="num">{{ oculto ? '••••' : (c.saldo | currency: 'BRL') }} de {{ m.valor | currency: 'BRL' }}</small>
+            </button>
+          }
+          <div class="acoes-conta">
+            <a matButton="tonal" routerLink="/app/transferir" [queryParams]="{ para: c.id }"><mat-icon>add</mat-icon>Guardar</a>
+            <a matButton routerLink="/app/transferir" [queryParams]="{ de: c.id, para: idPrincipal() }"><mat-icon>undo</mat-icon>Resgatar</a>
+            <button matButton (click)="abrirMeta(c)"><mat-icon>flag</mat-icon>{{ c.meta ? 'Meta' : 'Definir meta' }}</button>
+          </div>
+        }
+
+        @if (c.investimento; as i) {
+          <dl class="invest">
+            <div><dt>Produto</dt><dd>{{ i.produtoNome }} · {{ i.taxaAnual | percent: '1.2-2' }} a.a.</dd></div>
+            <div><dt>Aplicado</dt><dd class="num">{{ oculto ? '••••' : (i.aplicado | currency: 'BRL') }}</dd></div>
+            <div><dt>Rendeu</dt><dd class="num entrada">{{ oculto ? '••••' : (i.lucro | currency: 'BRL') }}</dd></div>
+            <div>
+              <dt>IR se resgatar hoje</dt>
+              <dd class="num">
+                @if (i.isentoIR) {
+                  isento
+                } @else {
+                  {{ oculto ? '••••' : (i.irSeResgatarTudo | currency: 'BRL') }} ({{ i.aliquotaIR | percent: '1.1-1' }})
+                }
+              </dd>
+            </div>
+          </dl>
+          <div class="acoes-conta">
+            <a matButton="tonal" routerLink="/app/transferir" [queryParams]="{ para: c.id }"><mat-icon>add</mat-icon>Aplicar</a>
+            <a matButton routerLink="/app/transferir" [queryParams]="{ de: c.id, para: idPrincipal() }"><mat-icon>undo</mat-icon>Resgatar</a>
+          </div>
+        }
+
         <mat-menu #menu="matMenu" xPosition="before">
           <a mat-menu-item routerLink="/app/extrato" [queryParams]="{ conta: c.id }"><mat-icon>receipt_long</mat-icon>Transações</a>
-          <a mat-menu-item routerLink="/app/lancar" [queryParams]="{ tipo: 'RECEITA', conta: c.id }"><mat-icon>add</mat-icon>Lançar receita</a>
-          <a mat-menu-item routerLink="/app/lancar" [queryParams]="{ tipo: 'DESPESA', conta: c.id }"><mat-icon>remove</mat-icon>Lançar despesa</a>
-          <a mat-menu-item routerLink="/app/transferir" [queryParams]="{ entre: 1, de: c.id }"><mat-icon>swap_horiz</mat-icon>Transferir</a>
+          @if (c.tipo !== 'INVESTIMENTO') {
+            <a mat-menu-item routerLink="/app/lancar" [queryParams]="{ tipo: 'RECEITA', conta: c.id }"><mat-icon>add</mat-icon>Lançar receita</a>
+            <a mat-menu-item routerLink="/app/lancar" [queryParams]="{ tipo: 'DESPESA', conta: c.id }"><mat-icon>remove</mat-icon>Lançar despesa</a>
+          }
+          <a mat-menu-item routerLink="/app/transferir" [queryParams]="{ de: c.id }"><mat-icon>swap_horiz</mat-icon>Transferir</a>
           <button mat-menu-item (click)="abrir(c)"><mat-icon>edit</mat-icon>Renomear</button>
           @if (!c.principal) {
             <button mat-menu-item (click)="encerrar(c)"><mat-icon>block</mat-icon>Encerrar</button>

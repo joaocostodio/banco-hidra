@@ -284,3 +284,20 @@ mat-progress-bar {
 .sub.primeira {
   margin-top: 4px;
 }
+
+.aviso-invest {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 18px 4px 0;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.aviso-invest .mat-icon {
+  flex: none;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: var(--prata);
+}

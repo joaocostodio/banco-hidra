@@ -1,0 +1,50 @@
+.tipos {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tipo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--borda);
+  cursor: pointer;
+}
+
+.tipo.escolhido {
+  border-color: var(--verde-borda);
+  background: var(--verde-suave);
+}
+
+/* O rádio fica escondido: o cartão inteiro é a opção (o rótulo continua acessível ao leitor de tela). */
+.tipo input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tipo:has(input:focus-visible) {
+  outline: 2px solid var(--verde);
+  outline-offset: 2px;
+}
+
+.tipo .mat-icon {
+  color: var(--verde);
+}
+
+.tipo b {
+  display: block;
+  font-weight: 600;
+}
+
+.tipo small {
+  color: var(--texto-suave);
+  font-size: 12px;
+}
+
+mat-form-field {
+  width: 100%;
+}

@@ -5,6 +5,7 @@ import bancohidra.dto.ClienteDtos.EditarClienteRequest;
 import bancohidra.dto.ClienteDtos.NovoClienteRequest;
 import bancohidra.entity.Conta;
 import bancohidra.entity.Perfil;
+import bancohidra.entity.ProdutoInvestimento;
 import bancohidra.entity.StatusConta;
 import bancohidra.entity.TipoConta;
 import bancohidra.entity.Usuario;
@@ -32,7 +33,7 @@ public class ClienteService {
         String senha = SenhaProvisoria.gerar();
         usuario.definirSenhaProvisoria(senha);
         usuario.persist();
-        return new Cadastro(abrirConta(usuario, Conta.NOME_PRINCIPAL, TipoConta.CORRENTE), senha);
+        return new Cadastro(abrirConta(usuario, Conta.NOME_PRINCIPAL, TipoConta.CORRENTE, null), senha);
     }
 
     /** Cadastro pela própria pessoa ("Criar conta"): ela já escolhe a senha, que precisa ser forte. */
@@ -41,20 +42,24 @@ public class ClienteService {
         Usuario usuario = novoCliente(req.nome(), req.cpf(), req.email());
         usuario.definirSenha(req.senha());
         usuario.persist();
-        abrirConta(usuario, Conta.NOME_PRINCIPAL, TipoConta.CORRENTE);
+        abrirConta(usuario, Conta.NOME_PRINCIPAL, TipoConta.CORRENTE, null);
         return usuario;
     }
 
-    /** Abre mais uma conta para o cliente (poupança, carteira...), com saldo zero. */
+    /**
+     * Abre mais uma conta para o cliente, com saldo zero. A fábrica {@link Conta#nova} cria a subclasse certa
+     * (o investimento exige o produto). Sem nome, fica o padrão do tipo ("Poupança", "Carteira"...).
+     */
     @Transactional
-    public Conta abrirConta(Usuario titular, String nome, TipoConta tipo) {
+    public Conta abrirConta(Usuario titular, String nome, TipoConta tipo, ProdutoInvestimento produto) {
         if (Conta.abertasDe(titular) >= Conta.LIMITE_POR_CLIENTE) {
             throw new RegraNegocioException("Limite de " + Conta.LIMITE_POR_CLIENTE + " contas abertas atingido");
         }
-        Conta conta = new Conta();
+        Conta conta = Conta.nova(tipo, produto);
         conta.titular = titular;
-        conta.nome = nome.trim();
-        conta.tipo = tipo;
+        if (nome != null && !nome.isBlank()) {
+            conta.nome = nome.trim();
+        }
         conta.numero = numeroLivre();
         conta.persist();
         return conta;

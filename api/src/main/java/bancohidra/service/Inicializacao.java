@@ -20,7 +20,8 @@ import java.util.List;
 public class Inicializacao {
 
     private static final List<String> CATEGORIAS_SISTEMA = List.of(
-            Categoria.DEPOSITO, Categoria.TRANSFERENCIA, Categoria.PIX, Categoria.PAGAMENTO, Categoria.SAQUE);
+            Categoria.DEPOSITO, Categoria.TRANSFERENCIA, Categoria.PIX, Categoria.PAGAMENTO, Categoria.SAQUE,
+            Categoria.RENDIMENTO, Categoria.IMPOSTOS);
 
     /** Categorias padrão para os lançamentos dos clientes (o administrador pode editar e criar outras). */
     private static final List<String> CATEGORIAS_PADRAO = List.of(

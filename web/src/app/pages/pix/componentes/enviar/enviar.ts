@@ -1,6 +1,6 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, ElementRef, OnInit, computed, effect, inject, input, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -71,6 +71,9 @@ export class Enviar implements OnInit {
   readonly conta = input<string>();
   /** ?de=id: de qual das minhas contas sai a transferência. */
   readonly de = input<string>();
+  /** ?para=id: para qual das minhas contas vai (Guardar / Aplicar / Resgatar): já pula para o valor. */
+  readonly para = input<string>();
+  private paraJaUsado = false;
 
   protected readonly passo = signal<Passo>('destino');
   protected readonly ocupado = signal(false);
@@ -92,6 +95,8 @@ export class Enviar implements OnInit {
   );
   /** Para onde dá para mandar entre as minhas contas (todas menos a de origem). */
   protected readonly destinosProprios = computed(() => this.ativas().filter((c) => c.id !== this.origem()?.id));
+  /** O investimento só resgata para as minhas contas (a API também confere). */
+  protected readonly origemEhInvestimento = computed(() => this.origem()?.tipo === 'INVESTIMENTO');
   /** Saldo de onde o dinheiro sai: a principal no Pix, a escolhida na transferência. */
   protected readonly saldoOrigem = computed(() =>
     this.modo() === 'pix' ? valorOu(this.minha, null)?.saldo : this.origem()?.saldo,
@@ -142,6 +147,15 @@ export class Enviar implements OnInit {
 
   constructor() {
     effect(() => this.foco()?.nativeElement.focus());
+
+    // ?para=id: assim que as contas chegam, escolhe esse destino e vai para o valor (uma vez só).
+    effect(() => {
+      const destino = this.ativas().find((c) => c.id === Number(this.para()));
+      if (destino && !this.paraJaUsado && destino.id !== this.origem()?.id) {
+        this.paraJaUsado = true;
+        untracked(() => this.usarMinhaConta(destino.agencia, destino.numero));
+      }
+    });
   }
 
   ngOnInit(): void {

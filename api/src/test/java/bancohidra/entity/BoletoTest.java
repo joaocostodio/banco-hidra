@@ -56,10 +56,10 @@ class BoletoTest {
     @Test
     void soPagaOuCancelaUmaVez() {
         Boleto pago = boleto("10.00");
-        pago.registrarPagamento(new Conta(), new BigDecimal("10.00"), UUID.randomUUID(), LocalDateTime.now());
+        pago.registrarPagamento(new ContaCorrente(), new BigDecimal("10.00"), UUID.randomUUID(), LocalDateTime.now());
         assertEquals(StatusBoleto.PAGO, pago.getStatus());
         assertThrows(RegraNegocioException.class,
-                () -> pago.registrarPagamento(new Conta(), BigDecimal.TEN, UUID.randomUUID(), LocalDateTime.now()));
+                () -> pago.registrarPagamento(new ContaCorrente(), BigDecimal.TEN, UUID.randomUUID(), LocalDateTime.now()));
         assertThrows(RegraNegocioException.class, pago::cancelar);
 
         Boleto cancelado = boleto("10.00");
@@ -71,7 +71,7 @@ class BoletoTest {
 
     @Test
     void emissaoValidaVencimento() {
-        Conta conta = new Conta();
+        Conta conta = new ContaCorrente();
         conta.numero = "000042-5";
         LocalDate hoje = LocalDate.of(2026, 11, 16);
         assertThrows(RegraNegocioException.class,

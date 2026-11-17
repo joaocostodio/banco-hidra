@@ -2,6 +2,7 @@ package bancohidra.service;
 
 import bancohidra.entity.Categoria;
 import bancohidra.entity.Conta;
+import bancohidra.entity.ContaRemunerada;
 import bancohidra.entity.TipoTransacao;
 import bancohidra.entity.Transacao;
 import bancohidra.exception.NaoEncontradoException;
@@ -10,7 +11,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
 
+import bancohidra.util.Dinheiro;
+
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.UUID;
 
 /**
@@ -26,8 +31,32 @@ public class MovimentacaoService {
     public Transacao depositar(Long contaId, BigDecimal valor, String descricao) {
         Conta conta = travar(contaId);
         conta.depositar(valor);
+        conta.aoReceber(valor, LocalDate.now());
         return registrar(conta, TipoTransacao.ENTRADA, valor, textoOu(descricao, Categoria.DEPOSITO),
                 sistema(Categoria.DEPOSITO), null, UUID.randomUUID());
+    }
+
+    /**
+     * Paga o rendimento devido até {@code hoje} numa conta remunerada (poupança ou investimento) e registra no
+     * extrato. Com {@code simularUmMes}, antes "volta o relógio" da conta 1 mês (só o administrador, para a
+     * apresentação). Cada conta roda na sua própria transação: um erro numa não desfaz as outras.
+     *
+     * @return o valor creditado (zero se não havia o que pagar ou a conta não rende)
+     */
+    @Transactional
+    public BigDecimal render(Long contaId, LocalDate hoje, boolean simularUmMes) {
+        if (!(travar(contaId) instanceof ContaRemunerada conta)) {
+            return BigDecimal.ZERO;
+        }
+        if (simularUmMes) {
+            conta.recuarRelogio(Period.ofMonths(1));
+        }
+        BigDecimal valor = conta.render(hoje);
+        if (valor.signum() > 0) {
+            registrar(conta, TipoTransacao.ENTRADA, valor, conta.descricaoRendimento(),
+                    sistema(Categoria.RENDIMENTO), null, UUID.randomUUID());
+        }
+        return valor;
     }
 
     /**
@@ -39,8 +68,13 @@ public class MovimentacaoService {
     public Transacao lancar(Long contaId, TipoTransacao tipo, BigDecimal valor, Categoria categoria,
                             String descricao) {
         Conta conta = travar(contaId);
+        if (!conta.aceitaLancamento()) {
+            throw new RegraNegocioException("A conta " + conta.nome + " não aceita lançamentos: "
+                    + "movimente com transferências entre as suas contas");
+        }
         if (tipo == TipoTransacao.ENTRADA) {
             conta.depositar(valor);
+            conta.aoReceber(valor, LocalDate.now());
         } else {
             conta.sacar(valor); // lança exceção se faltar saldo ou a conta não estiver ativa
         }
@@ -70,14 +104,31 @@ public class MovimentacaoService {
         if (!destino.isAtiva()) {
             throw new RegraNegocioException("A conta de destino não está recebendo transferências");
         }
-        origem.sacar(valor);      // lança exceção se faltar saldo ou a conta não estiver ativa
-        destino.depositar(valor);
+        // Regras de cada tipo de conta (polimorfismo): ex.: o investimento só aplica e resgata com o próprio dono.
+        origem.exigirPodeEnviarPara(destino);
+        destino.exigirPodeReceberDe(origem);
+
+        // O investimento desconta o IR do resgate: o destino recebe o líquido, e o imposto sai à parte no extrato.
+        LocalDate hoje = LocalDate.now();
+        BigDecimal imposto = origem.prepararSaida(Dinheiro.exigirPositivo(valor), hoje);
+        BigDecimal liquido = valor.subtract(imposto);
+        if (liquido.signum() <= 0) {
+            throw new RegraNegocioException("Valor pequeno demais: o imposto consumiria o resgate inteiro");
+        }
+        origem.sacar(liquido);    // lança exceção se faltar saldo ou a conta não estiver ativa
+        destino.depositar(liquido);
+        destino.aoReceber(liquido, hoje);
 
         UUID autenticacao = UUID.randomUUID();
         String texto = textoOu(descricao, categoria);
         Categoria cat = sistema(categoria);
-        Transacao saida = registrar(origem, TipoTransacao.SAIDA, valor, texto, cat, destino, autenticacao);
-        registrar(destino, TipoTransacao.ENTRADA, valor, texto, cat, origem, autenticacao);
+        Transacao saida = registrar(origem, TipoTransacao.SAIDA, liquido, texto, cat, destino, autenticacao);
+        registrar(destino, TipoTransacao.ENTRADA, liquido, texto, cat, origem, autenticacao);
+        if (imposto.signum() > 0) {
+            origem.sacar(imposto);
+            registrar(origem, TipoTransacao.SAIDA, imposto, "Imposto de Renda retido no resgate",
+                    sistema(Categoria.IMPOSTOS), null, UUID.randomUUID());
+        }
         return saida;
     }
 

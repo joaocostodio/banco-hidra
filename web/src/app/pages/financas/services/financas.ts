@@ -15,7 +15,15 @@ export const ICONE_TIPO_CONTA: Record<TipoConta, string> = {
   INVESTIMENTO: 'trending_up',
 };
 
-export const TIPOS_CONTA = Object.keys(NOME_TIPO_CONTA) as TipoConta[];
+export const DESCRICAO_TIPO_CONTA: Record<TipoConta, string> = {
+  CORRENTE: 'Para o dia a dia. Não rende.',
+  POUPANCA: 'Rende 0,5% ao mês e pode ter uma meta de economia.',
+  CARTEIRA: 'O dinheiro em espécie. Não rende.',
+  INVESTIMENTO: 'CDB, Tesouro ou LCI: rende todo dia; IR no resgate.',
+};
+
+/** O que dá para abrir pela tela "Nova conta" (todos os tipos). */
+export const TIPOS_NOVA_CONTA: TipoConta[] = ['POUPANCA', 'INVESTIMENTO', 'CARTEIRA', 'CORRENTE'];
 
 /** Mesmo limite da API (Conta.LIMITE_POR_CLIENTE). */
 export const LIMITE_CONTAS = 10;

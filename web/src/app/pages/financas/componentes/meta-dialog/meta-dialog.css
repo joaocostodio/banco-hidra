@@ -1,0 +1,11 @@
+mat-form-field {
+  width: 100%;
+}
+
+.espaco {
+  flex: 1;
+}
+
+.perigo {
+  color: var(--mat-sys-error);
+}

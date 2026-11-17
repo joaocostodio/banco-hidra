@@ -16,10 +16,12 @@ import {
   EnvioPix,
   FiltroTransacoes,
   Lancamento,
+  Meta,
   MeusDados,
   MinhaConta,
   NovaConta,
   Periodo,
+  ProdutoInvestimento,
   ResumoFinanceiro,
   TipoChavePix,
   Transacao,
@@ -64,8 +66,21 @@ export class MinhaContaService {
     return this.http.post<MinhaConta>(`${this.url}/contas`, conta);
   }
 
-  editarConta(id: number, conta: NovaConta): Observable<MinhaConta> {
-    return this.http.put<MinhaConta>(`${this.url}/contas/${id}`, conta);
+  /** O tipo não muda depois de aberta: só o nome. */
+  renomearConta(id: number, nome: string): Observable<MinhaConta> {
+    return this.http.put<MinhaConta>(`${this.url}/contas/${id}`, { nome });
+  }
+
+  produtosInvestimento(): Observable<ProdutoInvestimento[]> {
+    return this.http.get<ProdutoInvestimento[]>(`${this.url}/contas/produtos`);
+  }
+
+  definirMeta(contaId: number, meta: Meta): Observable<MinhaConta> {
+    return this.http.put<MinhaConta>(`${this.url}/contas/${contaId}/meta`, meta);
+  }
+
+  removerMeta(contaId: number): Observable<MinhaConta> {
+    return this.http.delete<MinhaConta>(`${this.url}/contas/${contaId}/meta`);
   }
 
   encerrarConta(id: number): Observable<MinhaConta> {

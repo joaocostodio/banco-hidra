@@ -18,11 +18,46 @@ export interface MinhaConta {
   /** A primeira conta: a das chaves Pix e dos boletos (não pode ser encerrada). */
   principal: boolean;
   abertaEm: string;
+  /** Poupança e investimento: como rende e quando cai o próximo rendimento. */
+  rendimento: { regra: string; proximo: string } | null;
+  /** Só na poupança com meta. Progresso de 0 a 1. */
+  meta: { descricao: string | null; valor: number; data: string | null; progresso: number } | null;
+  /** Só no investimento. */
+  investimento: {
+    produto: ProdutoInvestimentoId;
+    produtoNome: string;
+    taxaAnual: number;
+    isentoIR: boolean;
+    /** Dinheiro que entrou (o resto do saldo é lucro). */
+    aplicado: number;
+    lucro: number;
+    /** Alíquota de hoje pela tabela regressiva (0,225 = 22,5%). */
+    aliquotaIR: number;
+    irSeResgatarTudo: number;
+  } | null;
 }
 
+export type ProdutoInvestimentoId = 'CDB' | 'TESOURO_SELIC' | 'LCI';
+
+export interface ProdutoInvestimento {
+  id: ProdutoInvestimentoId;
+  nome: string;
+  taxaAnual: number;
+  isentoIR: boolean;
+}
+
+/** Abrir conta: sem nome, fica o do tipo; o investimento exige o produto. */
 export interface NovaConta {
   nome: string;
   tipo: TipoConta;
+  produto: ProdutoInvestimentoId | null;
+}
+
+export interface Meta {
+  valor: number;
+  descricao: string;
+  /** AAAA-MM-DD ou null (sem prazo). */
+  data: string | null;
 }
 
 export type TipoLancamento = 'RECEITA' | 'DESPESA';

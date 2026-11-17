@@ -27,6 +27,10 @@ export function iconeDaCategoria(categoria: string | null | undefined): string {
       return 'receipt_long';
     case 'Saque':
       return 'payments';
+    case 'Rendimento':
+      return 'trending_up';
+    case 'Impostos':
+      return 'account_balance';
     // Categorias padrão dos lançamentos
     case 'Alimentação':
       return 'restaurant';

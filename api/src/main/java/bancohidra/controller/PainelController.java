@@ -5,10 +5,13 @@ import bancohidra.security.Papeis;
 import bancohidra.service.PainelService;
 import bancohidra.security.UsuarioLogado;
 import bancohidra.service.RedeService;
+import bancohidra.service.RendimentoService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
@@ -27,6 +30,9 @@ public class PainelController {
 
     @Inject
     RedeService redeService;
+
+    @Inject
+    RendimentoService rendimentoService;
 
     @Inject
     UsuarioLogado logado;
@@ -52,5 +58,16 @@ public class PainelController {
 
     /** {@code tunel}: link público do túnel da Cloudflare, se houver um aberto (colegas em outras redes). */
     public record RedeResponse(List<String> enderecos, String tunel, boolean senhaPadrao) {
+    }
+
+    /**
+     * Para a apresentação: paga os rendimentos como se tivesse passado 1 mês (poupanças no aniversário,
+     * investimentos 30 dias). Os rendimentos de verdade são pagos sozinhos todo dia (RendimentoService).
+     */
+    @POST
+    @Path("/rendimentos/simular-mes")
+    @Consumes(MediaType.WILDCARD) // não tem corpo
+    public RendimentoService.Resultado simularMesDeRendimentos() {
+        return rendimentoService.simularUmMes();
     }
 }

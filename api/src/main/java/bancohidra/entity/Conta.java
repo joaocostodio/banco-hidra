@@ -5,25 +5,36 @@ import bancohidra.exception.SaldoInsuficienteException;
 import bancohidra.util.Dinheiro;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Conta corrente do Banco Hidra.
+ * Conta do Banco Hidra. É <b>abstrata</b>: cada tipo é uma subclasse ({@link ContaCorrente}, {@link ContaCarteira},
+ * {@link ContaPoupanca}, {@link ContaInvestimento}) que pode mudar as regras de movimentação sobrescrevendo os
+ * métodos "gancho" abaixo (polimorfismo). O código que movimenta dinheiro só conversa com {@code Conta} e não
+ * precisa saber o tipo.
  *
- * <p>O saldo é <b>encapsulado</b>: o campo é privado, não tem setter e só muda pelos
- * métodos {@link #depositar} e {@link #sacar}, que aplicam as regras do banco
- * (valor positivo, conta ativa, saldo suficiente). É a {@code ContaBancaria}
- * da aula de encapsulamento, agora persistida no banco de dados.
+ * <p>No banco de dados é uma tabela só ({@code SINGLE_TABLE}): a coluna {@code tipo} diz qual subclasse é cada linha.
+ *
+ * <p>O saldo é <b>encapsulado</b>: o campo é privado, não tem setter e só muda por {@link #depositar},
+ * {@link #sacar} e pelo rendimento ({@link #adicionarRendimento}, só para as subclasses).
  */
 @Entity
-public class Conta extends PanacheEntity {
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "tipo", discriminatorType = DiscriminatorType.STRING, length = 15,
+        columnDefinition = "varchar(15) default 'CORRENTE' not null")
+public abstract class Conta extends PanacheEntity {
 
     public static final String AGENCIA_PADRAO = "0001";
     public static final String NOME_PRINCIPAL = "Conta corrente";
@@ -36,10 +47,6 @@ public class Conta extends PanacheEntity {
      */
     @Column(nullable = false, length = 40, columnDefinition = "varchar(40) default '" + NOME_PRINCIPAL + "' not null")
     public String nome = NOME_PRINCIPAL;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 15, columnDefinition = "varchar(15) default 'CORRENTE' not null")
-    public TipoConta tipo = TipoConta.CORRENTE;
 
     @Column(nullable = false, length = 4)
     public String agencia = AGENCIA_PADRAO;
@@ -61,6 +68,18 @@ public class Conta extends PanacheEntity {
     @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal saldo = BigDecimal.ZERO.setScale(2);
 
+    /** Cria a conta do tipo pedido (fábrica: quem chama não precisa conhecer as subclasses). */
+    public static Conta nova(TipoConta tipo, ProdutoInvestimento produto) {
+        return switch (tipo) {
+            case CORRENTE -> new ContaCorrente();
+            case CARTEIRA -> new ContaCarteira();
+            case POUPANCA -> new ContaPoupanca();
+            case INVESTIMENTO -> new ContaInvestimento(produto);
+        };
+    }
+
+    public abstract TipoConta getTipo();
+
     public BigDecimal getSaldo() {
         return saldo;
     }
@@ -79,6 +98,46 @@ public class Conta extends PanacheEntity {
         }
         saldo = saldo.subtract(v);
     }
+
+    /** Rendimento pago pelo banco (só as contas remuneradas chamam). Rende mesmo bloqueada; encerrada, não. */
+    protected final void adicionarRendimento(BigDecimal valor) {
+        if (valor.signum() < 0 || status == StatusConta.ENCERRADA) {
+            throw new IllegalStateException("Rendimento inválido para a conta " + numero);
+        }
+        saldo = saldo.add(valor.setScale(2, java.math.RoundingMode.HALF_EVEN));
+    }
+
+    // ---------- ganchos que cada tipo de conta pode sobrescrever (polimorfismo) ----------
+
+    /** Pode receber esta transferência? Por padrão, de qualquer conta do banco. */
+    public void exigirPodeReceberDe(Conta origem) {
+        // aceita
+    }
+
+    /** Pode mandar dinheiro para esta conta? Por padrão, para qualquer conta do banco. */
+    public void exigirPodeEnviarPara(Conta destino) {
+        // aceita
+    }
+
+    /** Aceita lançamento manual de receita/despesa? */
+    public boolean aceitaLancamento() {
+        return true;
+    }
+
+    /**
+     * Chamado antes de sair dinheiro numa transferência. Devolve o imposto retido (o investimento desconta o
+     * Imposto de Renda do resgate); nas outras contas, zero.
+     */
+    public BigDecimal prepararSaida(BigDecimal valor, LocalDate hoje) {
+        return BigDecimal.ZERO.setScale(2);
+    }
+
+    /** Chamado depois de entrar dinheiro (o investimento registra o valor aplicado). */
+    public void aoReceber(BigDecimal valor, LocalDate hoje) {
+        // nada
+    }
+
+    // ---------- situação ----------
 
     public void bloquear() {
         if (status == StatusConta.ENCERRADA) {
@@ -103,6 +162,10 @@ public class Conta extends PanacheEntity {
 
     public boolean isAtiva() {
         return status == StatusConta.ATIVA;
+    }
+
+    public boolean mesmoTitularQue(Conta outra) {
+        return outra != null && titular.id.equals(outra.titular.id);
     }
 
     private void exigirAtiva() {

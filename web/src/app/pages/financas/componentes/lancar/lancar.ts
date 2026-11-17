@@ -49,8 +49,13 @@ export class Lancar implements OnInit {
   protected readonly contas = rxResource({ stream: () => this.minhaConta.contas() });
   protected readonly categorias = rxResource({ stream: () => this.minhaConta.categorias() });
 
-  /** Só contas abertas e ativas recebem lançamento; categorias de sistema (Pix...) são do banco. */
-  protected readonly contasAtivas = computed(() => valorOu(this.contas, []).filter((c) => c.status === 'ATIVA'));
+  /**
+   * Só contas ativas recebem lançamento, e o investimento não (ele só movimenta com aplicação e resgate).
+   * Categorias de sistema (Pix...) são do banco.
+   */
+  protected readonly contasAtivas = computed(() =>
+    valorOu(this.contas, []).filter((c) => c.status === 'ATIVA' && c.tipo !== 'INVESTIMENTO'),
+  );
   protected readonly categoriasLancaveis = computed(() => valorOu(this.categorias, []).filter((c) => !c.sistema));
   protected readonly erroCarga = computed(() => {
     const e = this.contas.error() ?? this.categorias.error();

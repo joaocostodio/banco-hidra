@@ -1,0 +1,42 @@
+<h2 mat-dialog-title>Meta de {{ conta.nome }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+  <mat-dialog-content>
+    @if (erro()) {
+      <div class="erro-geral" role="alert"><mat-icon>error</mat-icon>{{ erro() }}</div>
+    }
+
+    <mat-form-field>
+      <mat-label>Quero guardar</mat-label>
+      <span matTextPrefix>R$&nbsp;</span>
+      <input matInput class="num" formControlName="valor" inputmode="decimal" placeholder="0,00" autocomplete="off" />
+      @if (form.controls.valor.hasError('valor')) {
+        <mat-error>{{ form.controls.valor.getError('valor') }}</mat-error>
+      } @else {
+        <mat-error>Informe quanto quer guardar</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Para quê (opcional)</mat-label>
+      <input matInput formControlName="descricao" maxlength="60" placeholder="Ex.: Viagem de férias" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Até quando (opcional)</mat-label>
+      <input matInput [matDatepicker]="calendario" formControlName="data" [min]="minimo" />
+      <mat-datepicker-toggle matIconSuffix [for]="calendario" />
+      <mat-datepicker #calendario />
+      <mat-error>A data deve ser no futuro</mat-error>
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    @if (conta.meta) {
+      <button matButton type="button" class="perigo" (click)="remover()" [disabled]="salvando()">Tirar meta</button>
+    }
+    <span class="espaco"></span>
+    <button matButton type="button" mat-dialog-close>Cancelar</button>
+    <button matButton="filled" type="submit" [disabled]="salvando()">Salvar meta</button>
+  </mat-dialog-actions>
+</form>
