@@ -9,7 +9,8 @@ Projeto da disciplina de **Programação Orientada a Objetos** — EC04 / 2026 �
 
 **Gestão financeira (cliente)** — o que a atividade pede:
 - **Cadastro próprio** ("Criar conta") e login com **JWT em cookie httpOnly**
-- **Contas**: cada pessoa tem várias (corrente, poupança, carteira, investimento): abrir, renomear, encerrar
+- **Contas**: cada pessoa tem várias (corrente, poupança, carteira, investimento): abrir, renomear, encerrar.
+  Cada tipo é uma **subclasse** com regras próprias (herança e polimorfismo, ver "Herança das contas")
 - **Lançamentos** de receita e despesa, com **categoria**, em qualquer uma das contas
 - **Categorias**: as padrão do banco (Alimentação, Moradia, Salário...) e as **próprias** de cada cliente
 - **Transações filtradas por conta e por categoria** (e por tipo e período)
@@ -47,7 +48,7 @@ Testes da API (sobem um PostgreSQL descartável sozinhos, pelo Docker):
 
 ```bash
 cd api
-./mvnw test                 # 70 testes
+./mvnw test                 # 87 testes (usa a porta 8081: pare outra API de teste antes)
 ```
 
 Compilar para produção: `cd api && ./mvnw package` (gera `target/quarkus-app/quarkus-run.jar`) e
@@ -59,7 +60,7 @@ Compilar para produção: `cd api && ./mvnw package` (gera `target/quarkus-app/q
 banco-hidra/
 ├── api/                 Quarkus + Hibernate Panache + PostgreSQL   (porta 8080)
 │   └── src/main/java/bancohidra/
-│       ├── entity/      entidades (Conta, Transacao, Categoria, Usuario, Boleto, ChavePix)
+│       ├── entity/      entidades (Conta e filhas, Transacao, Categoria, Usuario, Boleto, ChavePix)
 │       ├── service/     regras de negócio (MovimentacaoService, FinancasService, ...)
 │       ├── controller/  rotas REST
 │       ├── dto/         o que entra e sai da API (records)
@@ -77,7 +78,9 @@ Baseado nos projetos de aula [finance-api](https://github.com/tiagoseibel/financ
 | Entidade | Campos principais |
 |---|---|
 | `Usuario` | nome, cpf, email, senha (hash BCrypt), perfil (`ADMIN` / `CLIENTE`) |
-| `Conta` | nome, tipo (`CORRENTE` / `POUPANCA` / `CARTEIRA` / `INVESTIMENTO`), agência, número, titular, saldo, status |
+| `Conta` (abstrata) | nome, tipo (`CORRENTE` / `POUPANCA` / `CARTEIRA` / `INVESTIMENTO`), agência, número, titular, saldo, status. Uma tabela só (`SINGLE_TABLE`), a coluna `tipo` diz a subclasse |
+| `ContaPoupanca` | meta (valor, descrição, data) e último rendimento |
+| `ContaInvestimento` | produto (`CDB` / `TESOURO_SELIC` / `LCI`), valor aplicado, data média das aplicações |
 | `Transacao` | tipo (entrada/saída), valor, data, descrição, categoria, conta, contraparte, autenticação |
 | `Categoria` | descrição, sistema, dono (nulo = padrão do banco; preenchido = categoria própria do cliente) |
 | `ChavePix` | tipo, valor, conta |
@@ -88,6 +91,24 @@ valor, situação da conta e saldo. O status do `Boleto` só muda por `registrar
 A senha do `Usuario` só é gravada como hash, e a própria entidade controla as tentativas erradas.
 
 A **primeira conta** de cada cliente é a principal: é a das chaves Pix e dos boletos, e não pode ser encerrada.
+
+### Herança das contas
+
+```
+Conta (abstrata)
+├── ContaCorrente
+├── ContaCarteira
+└── ContaRemunerada (abstrata: método-modelo render())
+    ├── ContaPoupanca       0,5% ao mês no "aniversário" + meta com barra de progresso
+    └── ContaInvestimento   CDB, Tesouro Selic ou LCI, rendimento diário, IR no resgate
+```
+
+- **Polimorfismo**: `Conta` tem "ganchos" que as filhas sobrescrevem (`exigirPodeReceberDe`, `exigirPodeEnviarPara`,
+  `aceitaLancamento`, `prepararSaida`, `aoReceber`). O `MovimentacaoService` só conversa com `Conta` e nunca
+  pergunta o tipo: quem decide é a própria conta.
+- **Método-modelo**: `ContaRemunerada.render()` é igual para todas (acha a data-base, credita, guarda a data); a
+  filha só diz *quanto* rende em `calcularRendimento()`.
+- **Fábrica**: `Conta.nova(tipo, produto)` cria a subclasse certa.
 
 ## Segurança
 
@@ -127,6 +148,15 @@ A **primeira conta** de cada cliente é a principal: é a das chaves Pix e dos b
   e grava as duas pontas com a mesma autenticação. Se algo falhar, nada é gravado.
 - **Resumo do mês**: transferência entre as próprias contas não conta como receita nem despesa.
 - **Contas**: até 10 abertas por cliente; encerrar só com saldo zero (o histórico continua no extrato).
+- **Poupança**: rende 0,5% ao mês (juros compostos) no aniversário da conta. Pode ter uma **meta** ("guardar
+  R$ 8.000 para a viagem até dezembro"); o progresso é o saldo dividido pela meta.
+- **Investimento**: rende todo dia, `saldo × ((1 + taxa anual)^(dias/365) − 1)`. Produtos (taxas fictícias):
+  CDB 110% do CDI, Tesouro Selic e LCI 95% do CDI. Só recebe aplicação e só faz resgate com contas do **mesmo
+  dono**, e **não aceita lançamento manual** de receita ou despesa.
+- **Imposto de Renda no resgate**: incide só sobre a parte do lucro resgatada, pela tabela regressiva (até 180 dias
+  22,5%, até 360 dias 20%, até 720 dias 17,5%, depois 15%). A LCI é isenta.
+- **Rendimentos**: uma tarefa agendada (`RendimentoService`) paga todo dia às 00:10. O administrador pode simular a
+  passagem de 1 mês em `POST /painel/rendimentos/simular-mes`.
 - **Categorias próprias**: até 30 por cliente; nome único entre as que ele enxerga; em uso não pode ser excluída.
 - CPF validado pelos dígitos verificadores; número da conta sorteado (6 dígitos + DV módulo 11).
 - **Pix copia e cola** no padrão BR Code do Banco Central (campos EMV + CRC16).
@@ -154,6 +184,7 @@ Erros voltam com corpo `{"erro": "mensagem"}`: **422** regra de negócio, **404*
 | GET | `/minha-conta/resumo` | Saldo de cada conta e geral, receitas/despesas do mês, despesas por categoria |
 | GET/POST | `/minha-conta/contas` | Minhas contas / abre outra (`nome`, `tipo`) |
 | PUT/DELETE | `/minha-conta/contas/{id}` | Renomeia / encerra |
+| PUT/DELETE | `/minha-conta/contas/{id}/meta` | Define / remove a meta da poupança (`valor`, `descricao`, `data`) |
 | POST | `/minha-conta/lancamentos` | `contaId`, `tipo` (`RECEITA`/`DESPESA`), `valor`, `categoriaId`, `descricao` |
 | GET | `/minha-conta/transacoes?contaId=&categoriaId=&tipo=&inicio=&fim=` | Transações de todas as minhas contas, com filtros |
 | GET/POST | `/minha-conta/categorias` | Padrão + minhas / cria categoria própria |
@@ -173,6 +204,7 @@ Erros voltam com corpo `{"erro": "mensagem"}`: **422** regra de negócio, **404*
 | GET/POST/PUT | `/clientes` | Lista, cadastra (com senha provisória) e edita clientes |
 | GET/POST/DELETE | `/contas/...` | Extrato, depósito, bloqueio e encerramento de contas |
 | GET | `/transacoes` | Últimas movimentações do banco |
+| POST | `/painel/rendimentos/simular-mes` | Paga os rendimentos como se tivesse passado 1 mês |
 
 ## Site (web/)
 

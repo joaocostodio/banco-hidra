@@ -53,16 +53,38 @@ Tudo parte do usuário do token, nunca de um id vindo da tela. Recurso de outra 
 Mover dinheiro da corrente para a poupança não é receita nem despesa: a consulta ignora transações cuja
 contraparte é do mesmo titular.
 
+**7. Herança e polimorfismo das contas** — `entity/Conta.java` (abstrata) e as filhas `ContaCorrente`,
+`ContaCarteira`, `ContaPoupanca`, `ContaInvestimento`.
+`Conta` tem métodos "gancho" (`exigirPodeReceberDe`, `exigirPodeEnviarPara`, `aceitaLancamento`, `prepararSaida`,
+`aoReceber`) e as filhas sobrescrevem o que muda. O `MovimentacaoService.transferir()` chama os ganchos sem saber
+o tipo da conta: é o polimorfismo. Na tela: abrir um Investimento e tentar lançar uma despesa nele (recusa) ou
+transferir para a conta de outra pessoa (recusa).
+
+**8. Método-modelo nos rendimentos** — `entity/ContaRemunerada.render()`.
+O "como" é igual para poupança e investimento (acha a data-base, credita, guarda até quando pagou); o "quanto" vem
+de `calcularRendimento()`, que cada filha implementa: poupança 0,5% ao mês, investimento diário pela taxa do
+produto (`entity/ProdutoInvestimento`). `service/RendimentoService` roda todo dia (`@Scheduled`).
+
+**9. Imposto de Renda regressivo** — `entity/ContaInvestimento.prepararSaida()` e `aliquotaPorPrazo()`.
+No resgate, só o lucro paga imposto (22,5% até 180 dias, 20% até 360, 17,5% até 720, 15% depois; LCI isenta). A
+conta guarda o `valorAplicado` e a data média das aplicações para separar lucro de principal.
+
+**10. Meta da poupança** — `entity/ContaPoupanca.definirMeta()` e `progressoDaMeta()` (barra de progresso na tela).
+
+Para mostrar rendimento sem esperar: no painel do ADM, `POST /painel/rendimentos/simular-mes` (testado em
+`PoupancaInvestimentoTest`).
+
 ## Testes
 
-`cd api && ./mvnw test` — 70 testes. Os principais para mostrar:
+`cd api && ./mvnw test` — 87 testes (usa a porta 8081: pare outra API de teste antes). Os principais para mostrar:
 
 | Classe | O que prova |
 |---|---|
 | `FinancasTest` | cadastro, contas, lançamentos, categorias privadas, filtros, resumo, concorrência |
 | `SegurancaTest` | cookie httpOnly/SameSite, CSRF, perfis, bloqueio após 5 senhas erradas |
 | `FluxoBancoTest` | depósito, Pix e transferência entre clientes |
-| `ContaTest`, `BoletoTest` | regras das entidades, sem banco de dados |
+| `PoupancaInvestimentoTest` | poupança, meta, investimento, IR no resgate, simulação de 1 mês |
+| `ContaTest`, `ContaRemuneradaTest`, `BoletoTest` | regras das entidades, sem banco de dados |
 
 ## Esboço
 
